@@ -1,1 +1,1 @@
-aAsVN,3,<EOF>
+func,main,(,),return,1,<EOF>
