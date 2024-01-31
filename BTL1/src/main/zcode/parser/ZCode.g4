@@ -16,9 +16,9 @@ decllist: decl decllist | decl;
 
 decl: funcdecl | vardecl;
 
-vardecl: (VAR IDENTIFIER ASSIGN expression) | (typ | DYNAMIC) IDENTIFIER (ASSIGN expression | );
+vardecl: (VAR IDENTIFIER ASSIGN expr) | (typ | DYNAMIC) IDENTIFIER (ASSIGN expr | );
 
-funcdecl: FUNC IDENTIFIER LRB parameterlist RRB newlinelist (returnstate | blockstate | );
+funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | );
 
 funcdeclonly: FUNC IDENTIFIER LRB parameterlist RRB;
 
@@ -28,19 +28,21 @@ parameterprime: param CM parameterprime | param;
 
 param: typ IDENTIFIER;
 
-newlinelist: NEWLINE newlinelist | ;
+nullablenewlinelist: NEWLINE newlinelist | ;
+
+newlinelist: NEWLINE newlinelist | NEWLINE;
 
 typ: NUMBER | BOOL | STRING;
 
-returnstate: RETURN (IDENTIFIER | NUMLIT) NEWLINE;
+returnstate: RETURN (IDENTIFIER | NUMLIT | ) NEWLINE;
 
-blockstate: BEGIN (IDENTIFIER | NEWLINE | ) END NEWLINE;
+blockstate: BEGIN (IDENTIFIER | newlinelist | ) END newlinelist;
 
 arraylit: LSB elementlist RSB;
 
-elementlist: expression CM elementlist | ;
+elementlist: expr CM elementlist | expr;
 
-expression: NUMLIT; //temporary
+expr: NUMLIT; //temporary
 
 //Keywords
 TRUE: 'true';
@@ -90,7 +92,7 @@ RSB: ']';
 CM: ',';
 NEWLINE: '\n';
 
-IDENTIFIER: [a-zA-Z_][a-zA-Z_]*;
+IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*;
 LINECMT: '##' .*? ('\n'|EOF) -> skip;
 
 //Literals
