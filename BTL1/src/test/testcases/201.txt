@@ -1,5 +1,3 @@
-func main()
-        begin
-        
+func main() begin
         end
         

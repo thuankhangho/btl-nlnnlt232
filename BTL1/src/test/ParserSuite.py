@@ -12,9 +12,7 @@ class ParserSuite(unittest.TestCase):
     
     def test_simple_program(self):
         """Simple program: int main() {} """
-        input = """func main()
-        begin
-        
+        input = """func main() begin
         end
         """
         expect = "successful"
@@ -23,7 +21,6 @@ class ParserSuite(unittest.TestCase):
     def test_simple_program2(self):
         """Simple program: int main() {} """
         input = """func main() return 1
-        
         """
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,202))

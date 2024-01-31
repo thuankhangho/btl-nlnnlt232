@@ -16,7 +16,7 @@ decllist: decl decllist | decl;
 
 decl: funcdecl | vardecl;
 
-vardecl: VAR IDENTIFIER ASSIGN expression | (typ | DYNAMIC) IDENTIFIER (ASSIGN expression | );
+vardecl: (VAR IDENTIFIER ASSIGN expression) | (typ | DYNAMIC) IDENTIFIER (ASSIGN expression | );
 
 funcdecl: FUNC IDENTIFIER LRB parameterlist RRB newlinelist (returnstate | blockstate | );
 
@@ -105,7 +105,7 @@ fragment ESCAPESEQ: '\\b' | '\\f' | '\\r' | '\\n' | '\\t' | '\\"' | '\\\\';
 fragment CHARSEQ: ~[\b\t\n\f\r"\\] | ESCAPESEQ | '\'"';
 
 
-WS: [ \t\r\n]+ -> skip; // skip spaces, tabs, newlines
+WS: [ \t\r]+ -> skip; // skip spaces, tabs
 ILLEGAL_ESCAPE: '"' ('\\'[bfrnt\\'] | ~[\n\r\\"])* ('\\'~[bfrnt'\\]) {self.text = self.text[1:]; raise IllegalEscape(self.text)};
 UNCLOSE_STRING: '"' ('\'"' | '\\' [btnfr'\\] | ~[\r\t\n\\"] )* {self.text = self.text[1:]; raise UncloseString(self.text)};
 ERROR_CHAR: . {raise ErrorToken(self.text)};
