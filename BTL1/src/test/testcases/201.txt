@@ -1,3 +1,2 @@
-func main() begin
-        end
+func main() return 1
         

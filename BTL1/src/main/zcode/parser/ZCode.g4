@@ -9,16 +9,24 @@ options {
 	language = Python3;
 }
 
-program: decllist EOF;
+program: nullablenewlinelist decllist EOF;
 
 //Parser
 decllist: decl decllist | decl;
 
 decl: funcdecl | vardecl;
 
-vardecl: (VAR IDENTIFIER ASSIGN expr) | (typ | DYNAMIC) IDENTIFIER (ASSIGN expr | );
+vardecl: (typdecl | implidecl) nullablenewlinelist;
 
-funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | );
+typdecl: typ IDENTIFIER (ASSIGN expr | );
+
+implidecl: implivardecl | implidynadecl;
+
+implivardecl: VAR IDENTIFIER ASSIGN expr;
+
+implidynadecl: DYNAMIC IDENTIFIER (ASSIGN expr | );
+
+funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | ) nullablenewlinelist;
 
 funcdeclonly: FUNC IDENTIFIER LRB parameterlist RRB;
 
@@ -28,21 +36,51 @@ parameterprime: param CM parameterprime | param;
 
 param: typ IDENTIFIER;
 
-nullablenewlinelist: NEWLINE newlinelist | ;
-
 newlinelist: NEWLINE newlinelist | NEWLINE;
+
+nullablenewlinelist: NEWLINE nullablenewlinelist | ;
 
 typ: NUMBER | BOOL | STRING;
 
-returnstate: RETURN (IDENTIFIER | NUMLIT | ) NEWLINE;
+returnstate: RETURN (expr | ) newlinelist;
 
-blockstate: BEGIN (IDENTIFIER | newlinelist | ) END newlinelist;
+blockstate: BEGIN (expr | newlinelist) END newlinelist;
 
 arraylit: LSB elementlist RSB;
 
 elementlist: expr CM elementlist | expr;
 
-expr: NUMLIT; //temporary
+relational: EQUAL | CMPRSTR | DIFF | LT | GT | LE | GE;
+
+logical: AND | OR;
+
+adding: PLUS | MINUS;
+
+multiplying: MULTIPLY | DIVIDE | MOD;
+
+expr: expr1 CONCAT expr1 | expr1;
+
+expr1: expr2 relational expr2 | expr2;
+
+expr2: expr2 logical expr3 | expr3;
+
+expr3: expr3 adding expr4 | expr4;
+
+expr4: expr4 multiplying expr5 | expr5;
+
+expr5: NOT expr5 | expr6;
+
+expr6: MINUS expr6 | expr7;
+
+expr7: expr7 LSB exprlist RSB | expr8;
+
+expr8: IDENTIFIER | literal | LRB expr RRB;
+
+literal: NUMLIT | BOOLLIT | STRINGLIT | arraytype;
+
+arraytype: IDENTIFIER LSB exprlist RSB;
+
+exprlist: expr CM exprlist | expr;
 
 //Keywords
 TRUE: 'true';
