@@ -1,8 +1,9 @@
+// Student ID: 2011357
+// Student name: Ho Thuan Khang
 grammar ZCode;
 
 @lexer::header {
 from lexererr import *
-# Student ID: 2011357
 }
 
 options {
@@ -18,7 +19,7 @@ decl: funcdecl | vardecl;
 
 vardecl: (typdecl | implidecl) nullablenewlinelist;
 
-typdecl: typ IDENTIFIER (ASSIGN expr | );
+typdecl: typ IDENTIFIER (LSB IDENTIFIER RSB | ) (ASSIGN expr | );
 
 implidecl: implivardecl | implidynadecl;
 
@@ -27,8 +28,6 @@ implivardecl: VAR IDENTIFIER ASSIGN expr;
 implidynadecl: DYNAMIC IDENTIFIER (ASSIGN expr | );
 
 funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | ) nullablenewlinelist;
-
-funcdeclonly: FUNC IDENTIFIER LRB parameterlist RRB;
 
 parameterlist: parameterprime | ;
 
@@ -42,13 +41,11 @@ nullablenewlinelist: NEWLINE nullablenewlinelist | ;
 
 typ: NUMBER | BOOL | STRING;
 
-returnstate: RETURN (expr | ) newlinelist;
-
-blockstate: BEGIN (expr | newlinelist) END newlinelist;
-
 arraylit: LSB elementlist RSB;
 
 elementlist: expr CM elementlist | expr;
+
+functioncall: IDENTIFIER LRB argumentlist RRB;
 
 relational: EQUAL | CMPRSTR | DIFF | LT | GT | LE | GE;
 
@@ -74,13 +71,46 @@ expr6: MINUS expr6 | expr7;
 
 expr7: expr7 LSB exprlist RSB | expr8;
 
-expr8: IDENTIFIER | literal | LRB expr RRB;
+expr8: IDENTIFIER | literal | LRB expr RRB | functioncall;
 
 literal: NUMLIT | BOOLLIT | STRINGLIT | arraytype;
 
 arraytype: IDENTIFIER LSB exprlist RSB;
 
 exprlist: expr CM exprlist | expr;
+
+//Statements
+vardeclstate: (typdecl | implidecl) newlinelist;
+
+assignstate: lhs ASSIGN expr newlinelist;
+
+lhs: IDENTIFIER (LSB NUMLIT RSB)?;
+
+ifstate: IF LRB expr RRB nullablenewlinelist stmt (elsestate | elifstatelist | );
+
+elsestate: ELSE stmt newlinelist;
+
+elifstatelist: elifstate elifstatelist | elifstate;
+
+elifstate: ELIF LRB expr RRB nullablenewlinelist stmt;
+
+forstate: FOR IDENTIFIER UNTIL expr BY expr nullablenewlinelist stmt;
+
+breakstate: BREAK nullablenewlinelist;
+
+continuestate: CONTINUE nullablenewlinelist;
+
+returnstate: RETURN (expr | ) newlinelist;
+
+functioncallstate: IDENTIFIER LRB argumentlist RRB newlinelist;
+
+argumentlist: expr CM argumentlist | ;
+
+blockstate: BEGIN (stmtlist | newlinelist) END newlinelist; //sua sau
+
+stmtlist: stmt stmtlist | ;
+
+stmt: vardeclstate | assignstate | ifstate | forstate | breakstate | continuestate | returnstate | functioncallstate | blockstate;
 
 //Keywords
 TRUE: 'true';
@@ -130,7 +160,6 @@ RSB: ']';
 CM: ',';
 NEWLINE: '\n';
 
-IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*;
 LINECMT: '##' .*? ('\n'|EOF) -> skip;
 
 //Literals
@@ -144,6 +173,7 @@ STRINGLIT: '"' CHARSEQ* '"' {self.text = self.text[1:-1]};
 fragment ESCAPESEQ: '\\b' | '\\f' | '\\r' | '\\n' | '\\t' | '\\"' | '\\\\';
 fragment CHARSEQ: ~[\b\t\n\f\r"\\] | ESCAPESEQ | '\'"';
 
+IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*;
 
 WS: [ \t\r]+ -> skip; // skip spaces, tabs
 ILLEGAL_ESCAPE: '"' ('\\'[bfrnt\\'] | ~[\n\r\\"])* ('\\'~[bfrnt'\\]) {self.text = self.text[1:]; raise IllegalEscape(self.text)};

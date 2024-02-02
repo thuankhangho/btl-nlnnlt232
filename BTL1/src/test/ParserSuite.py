@@ -18,7 +18,21 @@ class ParserSuite(unittest.TestCase):
         self.assertTrue(TestParser.test(input,expect,202))
         
     def test_simple_program3(self):
-        input = """number Votien
+        input = """func main() begin
+        aPI[3] <- 3.14
+        end
         """
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,203))
+    
+    def test_005(self):
+        """test function declaration"""
+        input = """func main()
+            begin
+                var j <- 1
+                for i until i >= 10 by 1
+                    writeNumber(i)
+            end
+        """
+        expect = "successful"
+        self.assertTrue(TestParser.test(input,expect,205))

@@ -23,8 +23,12 @@ class LexerSuite(unittest.TestCase):
         expect = """He asked me: '"Where is John?'",<EOF>"""
         self.assertTrue(TestLexer.test(input,expect,104))
 
-    def test_072(self):
+    def test_105(self):
+        self.assertTrue(TestLexer.test("## this is a comment\n var x <- 10","var,x,<-,10,<EOF>",105))
+        
+    def test_172(self):
         self.assertTrue(TestLexer.test(""" "'" ""","',<EOF>",172))
+        
         
     # def test_complex_string(self):
     #     input = """ "He asked me: \'"Where is John?\'"" """
