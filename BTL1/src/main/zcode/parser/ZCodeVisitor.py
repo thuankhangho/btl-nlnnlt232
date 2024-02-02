@@ -174,6 +174,11 @@ class ZCodeVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ZCodeParser#numlist.
+    def visitNumlist(self, ctx:ZCodeParser.NumlistContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ZCodeParser#exprlist.
     def visitExprlist(self, ctx:ZCodeParser.ExprlistContext):
         return self.visitChildren(ctx)
@@ -241,6 +246,11 @@ class ZCodeVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by ZCodeParser#argumentlist.
     def visitArgumentlist(self, ctx:ZCodeParser.ArgumentlistContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#argumentprime.
+    def visitArgumentprime(self, ctx:ZCodeParser.ArgumentprimeContext):
         return self.visitChildren(ctx)
 
 

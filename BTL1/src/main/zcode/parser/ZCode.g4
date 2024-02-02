@@ -27,13 +27,13 @@ implivardecl: VAR IDENTIFIER ASSIGN expr;
 
 implidynadecl: DYNAMIC IDENTIFIER (ASSIGN expr | );
 
-funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | ) nullablenewlinelist;
+funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | newlinelist | );
 
 parameterlist: parameterprime | ;
 
 parameterprime: param CM parameterprime | param;
 
-param: typ IDENTIFIER;
+param: typ (IDENTIFIER | arraytype);
 
 newlinelist: NEWLINE newlinelist | NEWLINE;
 
@@ -106,7 +106,9 @@ returnstate: RETURN (expr | ) newlinelist;
 
 functioncallstate: IDENTIFIER LRB argumentlist RRB newlinelist;
 
-argumentlist: expr CM argumentlist | ;
+argumentlist: argumentprime | ;
+
+argumentprime: expr CM argumentprime | ;
 
 blockstate: BEGIN (stmtlist | newlinelist) END newlinelist; //sua sau
 
@@ -115,6 +117,7 @@ stmtlist: stmt stmtlist | ;
 stmt: vardeclstate | assignstate | ifstate | forstate | breakstate | continuestate | returnstate | functioncallstate | blockstate;
 
 //Keywords
+BOOLLIT: TRUE | FALSE;
 TRUE: 'true';
 FALSE: 'false';
 NUMBER: 'number';
@@ -169,7 +172,6 @@ NUMLIT: INTEGER DECIMAL? EXPONENT?;
 fragment INTEGER: [0-9]+;
 fragment DECIMAL: '.'[0-9]*;
 fragment EXPONENT: ('e'|'E')('+'|'-')?[0-9]+;
-BOOLLIT: TRUE | FALSE;
 STRINGLIT: '"' CHARSEQ* '"' {self.text = self.text[1:-1]};
 
 fragment ESCAPESEQ: '\\b' | '\\f' | '\\r' | '\\n' | '\\t' | '\'' | '\\\\';
@@ -179,5 +181,5 @@ IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*;
 
 WS: [ \t\r]+ -> skip; // skip spaces, tabs
 ILLEGAL_ESCAPE: '"' ('\\'[bfrnt\\'] | ~[\n\r\\"])* ('\\'~[bfrnt'\\]) {self.text = self.text[1:]; raise IllegalEscape(self.text)};
-UNCLOSE_STRING: '"' ('\'"' | '\\' [btnfr'\\] | ~[\r\t\n\\"] )* {self.text = self.text[1:]; raise UncloseString(self.text)};
+UNCLOSE_STRING: '"' ('\\' [btnfr'\\] | ~[\r\t\n\\"] )* {self.text = self.text[1:]; raise UncloseString(self.text)};
 ERROR_CHAR: . {raise ErrorToken(self.text)};

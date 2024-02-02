@@ -1,4 +1,3 @@
-func main() begin
-        aPI[3] <- 3.14
-        end
+ 
+            dynamic VoTien[5] <- 3
         

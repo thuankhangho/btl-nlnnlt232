@@ -24,6 +24,12 @@ class ParserSuite(unittest.TestCase):
         """
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,203))
+
+    def test_simple_program3(self):
+        input = """number VoTien
+        """
+        expect = "successful"
+        self.assertTrue(TestParser.test(input,expect,204))
     
     def test_005(self):
         """test function declaration"""
