@@ -26,6 +26,11 @@ class LexerSuite(unittest.TestCase):
     def test_105(self):
         self.assertTrue(TestLexer.test("## this is a comment\n var x <- 10","var,x,<-,10,<EOF>",105))
         
+    def test_106(self):
+        input = "a <- 5 ##this is a line comment"
+        expected = "a,<-,5,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 100))
+        
     def test_172(self):
         self.assertTrue(TestLexer.test(""" "'" ""","',<EOF>",172))
         

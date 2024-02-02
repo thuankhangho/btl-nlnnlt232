@@ -19,7 +19,7 @@ decl: funcdecl | vardecl;
 
 vardecl: (typdecl | implidecl) nullablenewlinelist;
 
-typdecl: typ IDENTIFIER (LSB IDENTIFIER RSB | ) (ASSIGN expr | );
+typdecl: typ (IDENTIFIER | arraytype) (ASSIGN expr | );
 
 implidecl: implivardecl | implidynadecl;
 
@@ -75,7 +75,9 @@ expr8: IDENTIFIER | literal | LRB expr RRB | functioncall;
 
 literal: NUMLIT | BOOLLIT | STRINGLIT | arraytype;
 
-arraytype: IDENTIFIER LSB exprlist RSB;
+arraytype: IDENTIFIER LSB numlist RSB;
+
+numlist: NUMLIT CM numlist | NUMLIT;
 
 exprlist: expr CM exprlist | expr;
 
@@ -170,7 +172,7 @@ fragment EXPONENT: ('e'|'E')('+'|'-')?[0-9]+;
 BOOLLIT: TRUE | FALSE;
 STRINGLIT: '"' CHARSEQ* '"' {self.text = self.text[1:-1]};
 
-fragment ESCAPESEQ: '\\b' | '\\f' | '\\r' | '\\n' | '\\t' | '\\"' | '\\\\';
+fragment ESCAPESEQ: '\\b' | '\\f' | '\\r' | '\\n' | '\\t' | '\'' | '\\\\';
 fragment CHARSEQ: ~[\b\t\n\f\r"\\] | ESCAPESEQ | '\'"';
 
 IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*;
