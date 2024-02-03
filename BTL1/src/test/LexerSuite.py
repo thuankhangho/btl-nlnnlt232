@@ -256,13 +256,197 @@ class LexerSuite(unittest.TestCase):
         expected = "Illegal Escape In String: Hello \&"
         self.assertTrue(TestLexer.test(input, expected, 151))
         
+    def test_152(self):
+        input = "[1,2,3]"
+        expected = "[,1,,,2,,,3,],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 152))
         
-    # def test_complex_string(self):
-    #     input = """ "He asked me: \'"Where is John?\'"" """
-    #     expect = """He asked me: '"Where is John?'",<EOF>"""
-    #     self.assertTrue(TestLexer.test(input,expect,102))
+    def test_153(self):
+        input = "[\"a\",1,true]"
+        expected = "[,a,,,1,,,true,],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 153))
         
-    # def test_complex_string(self):
-    #     """test complex string"""
-    #     self.assertTrue(TestLexer.test("'isn''t'","'isn''t',<EOF>",102))
-    
+    def test_154(self):
+        input = "var a <- [\"a\",\"b\",\"c\",\"d\"]"
+        expected = "var,a,<-,[,a,,,b,,,c,,,d,],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 154))
+        
+    def test_155(self):
+        input = "[[a,b,c],a,b,c]"
+        expected = "[,[,a,,,b,,,c,],,,a,,,b,,,c,],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 155))
+        
+    def test_156(self):
+        input = "[a,b,c,d],e]"
+        expected = "[,a,,,b,,,c,,,d,],,,e,],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 156))
+        
+    def test_157(self):
+        input = "[a,b,c,d],e,[f,g,h]]"
+        expected = "[,a,,,b,,,c,,,d,],,,e,,,[,f,,,g,,,h,],],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 157))
+        
+    def test_158(self):
+        input = "\"new X()\""
+        expected = "new X(),<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 158))
+        
+    def test_159(self):
+        input = "\"\"\"\""
+        expected = ",,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 159))
+        
+    def test_160(self):
+        input = "number a <- 1E+3"
+        expected = "number,a,<-,1E+3,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 160))
+        
+    def test_161(self):
+        input = "[2.3, 4.2, 102e3]"
+        expected = "[,2.3,,,4.2,,,102e3,],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 161))
+        
+    def test_162(self):
+        input = "abc\t"
+        expected = "abc,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 162))
+        
+    def test_163(self):
+        input = "1234567"
+        expected = "1234567,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 163))
+        
+    def test_164(self):
+        input = "1234.567"
+        expected = "1234.567,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 164))
+        
+    def test_165(self):
+        input = "\"Hi\"\""
+        expected = "Hi,Unclosed String: "
+        self.assertTrue(TestLexer.test(input, expected, 165))
+        
+    def test_166(self):
+        input = "a == 2"
+        expected = "a,==,2,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 166))
+        
+    def test_167(self):
+        input = "a % 5 == 2"
+        expected = "a,%,5,==,2,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 167))
+        
+    def test_168(self):
+        input = "a and 2"
+        expected = "a,and,2,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 168))
+        
+    def test_169(self):
+        input = "a and & 2"
+        expected = "a,and,Error Token &"
+        self.assertTrue(TestLexer.test(input, expected, 169))
+        
+    def test_170(self):
+        input = "a or | 2"
+        expected = "a,or,Error Token |"
+        self.assertTrue(TestLexer.test(input, expected, 170))
+        
+    def test_171(self):
+        input = "a / 2"
+        expected = "a,/,2,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 171))
+        
+    def test_172(self):
+        input = "a != 2"
+        expected = "a,!=,2,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 172))
+        
+    def test_173(self):
+        input = "func constructor"
+        expected = "func,constructor,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 173))
+        
+    def test_174(self):
+        input = "## This is a block comment,\n##that span in many lines"
+        expected = "<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 174))
+        
+    def test_175(self):
+        input = "[0-9][a-zA-Z]"
+        expected = "[,0,-,9,],[,a,-,zA,-,Z,],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 175))
+        
+    def test_176(self):
+        input = "sleep/study/relax/aesthetic"
+        expected = "sleep,/,study,/,relax,/,aesthetic,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 176))
+        
+    def test_177(self):
+        input = "\"\#metoo\""
+        expected = "Illegal Escape In String: \#"
+        self.assertTrue(TestLexer.test(input, expected, 177))
+        
+    def test_178(self):
+        input = "\"Lofi \And \Chill\""
+        expected = "Illegal Escape In String: Lofi \A"
+        self.assertTrue(TestLexer.test(input, expected, 178))
+        
+    def test_179(self):
+        input = "\"$$$\""
+        expected = "$$$,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 179))
+        
+    def test_180(self):
+        input = "[\"$\"$$]"
+        expected = "[,$,Error Token $"
+        self.assertTrue(TestLexer.test(input, expected, 180))
+        
+    def test_181(self):
+        input = "$$$"
+        expected = "Error Token $"
+        self.assertTrue(TestLexer.test(input, expected, 181))
+        
+    def test_182(self):
+        input = """\b"""
+        expected = "Error Token "
+        self.assertTrue(TestLexer.test(input, expected, 182))
+        
+    def test_183(self):
+        input = "\"\%\""
+        expected = "Illegal Escape In String: \%"
+        self.assertTrue(TestLexer.test(input, expected, 183))
+        
+    def test_184(self):
+        input = "a[2] <- a[1][2]"
+        expected = "a,[,2,],<-,a,[,1,],[,2,],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 184))
+        
+    def test_185(self):
+        input = "a[2[3[4[5[6[7[8[9]]]]]]]]"
+        expected = "a,[,2,[,3,[,4,[,5,[,6,[,7,[,8,[,9,],],],],],],],],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 185))
+        
+    def test_186(self):
+        input = """string a <- test string ##this comment is irrelevant"\n"""
+        expected = "string,a,<-,test,string,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 186))
+        
+    def test_187(self):
+        input = "bool a <- [a,b,c,d,e,...]"
+        expected = "bool,a,<-,[,a,,,b,,,c,,,d,,,e,,,...,],<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 187))
+        
+    def test_188(self):
+        input = """say "'"Hello World'"" """
+        expected = "say,'\"Hello World'\",<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 188))
+        
+    def test_189(self):
+        input = """print "Hello \nWorld"""
+        expected = "print,Unclosed String: Hello "
+        self.assertTrue(TestLexer.test(input, expected, 189))
+        
+    def test_190(self):
+        input = """ print "Hello \\nWorld" """
+        expected = "print,Hello \\nWorld,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 190))
