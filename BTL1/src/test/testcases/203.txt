@@ -1,4 +1,2 @@
-func main() begin
-        aPI[3] <- 3.14
-        end
+number temp
         

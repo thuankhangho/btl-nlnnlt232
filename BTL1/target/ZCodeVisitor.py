@@ -14,13 +14,38 @@ class ZCodeVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#list_declared.
-    def visitList_declared(self, ctx:ZCodeParser.List_declaredContext):
+    # Visit a parse tree produced by ZCodeParser#decllist.
+    def visitDecllist(self, ctx:ZCodeParser.DecllistContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#declared.
-    def visitDeclared(self, ctx:ZCodeParser.DeclaredContext):
+    # Visit a parse tree produced by ZCodeParser#decl.
+    def visitDecl(self, ctx:ZCodeParser.DeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#vardecl.
+    def visitVardecl(self, ctx:ZCodeParser.VardeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#typdecl.
+    def visitTypdecl(self, ctx:ZCodeParser.TypdeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#implidecl.
+    def visitImplidecl(self, ctx:ZCodeParser.ImplideclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#implivardecl.
+    def visitImplivardecl(self, ctx:ZCodeParser.ImplivardeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#implidynadecl.
+    def visitImplidynadecl(self, ctx:ZCodeParser.ImplidynadeclContext):
         return self.visitChildren(ctx)
 
 
@@ -44,103 +69,128 @@ class ZCodeVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ZCodeParser#newlinelist.
+    def visitNewlinelist(self, ctx:ZCodeParser.NewlinelistContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#nullablenewlinelist.
+    def visitNullablenewlinelist(self, ctx:ZCodeParser.NullablenewlinelistContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ZCodeParser#typ.
     def visitTyp(self, ctx:ZCodeParser.TypContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#vardecl.
-    def visitVardecl(self, ctx:ZCodeParser.VardeclContext):
+    # Visit a parse tree produced by ZCodeParser#arraylit.
+    def visitArraylit(self, ctx:ZCodeParser.ArraylitContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#keyword_var.
-    def visitKeyword_var(self, ctx:ZCodeParser.Keyword_varContext):
+    # Visit a parse tree produced by ZCodeParser#elementlist.
+    def visitElementlist(self, ctx:ZCodeParser.ElementlistContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#implicit_var.
-    def visitImplicit_var(self, ctx:ZCodeParser.Implicit_varContext):
+    # Visit a parse tree produced by ZCodeParser#functioncall.
+    def visitFunctioncall(self, ctx:ZCodeParser.FunctioncallContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#implicit_dynamic.
-    def visitImplicit_dynamic(self, ctx:ZCodeParser.Implicit_dynamicContext):
+    # Visit a parse tree produced by ZCodeParser#relational.
+    def visitRelational(self, ctx:ZCodeParser.RelationalContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expression.
-    def visitExpression(self, ctx:ZCodeParser.ExpressionContext):
+    # Visit a parse tree produced by ZCodeParser#logical.
+    def visitLogical(self, ctx:ZCodeParser.LogicalContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expression1.
-    def visitExpression1(self, ctx:ZCodeParser.Expression1Context):
+    # Visit a parse tree produced by ZCodeParser#adding.
+    def visitAdding(self, ctx:ZCodeParser.AddingContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expression2.
-    def visitExpression2(self, ctx:ZCodeParser.Expression2Context):
+    # Visit a parse tree produced by ZCodeParser#multiplying.
+    def visitMultiplying(self, ctx:ZCodeParser.MultiplyingContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expression3.
-    def visitExpression3(self, ctx:ZCodeParser.Expression3Context):
+    # Visit a parse tree produced by ZCodeParser#expr.
+    def visitExpr(self, ctx:ZCodeParser.ExprContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expression4.
-    def visitExpression4(self, ctx:ZCodeParser.Expression4Context):
+    # Visit a parse tree produced by ZCodeParser#expr1.
+    def visitExpr1(self, ctx:ZCodeParser.Expr1Context):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expression5.
-    def visitExpression5(self, ctx:ZCodeParser.Expression5Context):
+    # Visit a parse tree produced by ZCodeParser#expr2.
+    def visitExpr2(self, ctx:ZCodeParser.Expr2Context):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expression6.
-    def visitExpression6(self, ctx:ZCodeParser.Expression6Context):
+    # Visit a parse tree produced by ZCodeParser#expr3.
+    def visitExpr3(self, ctx:ZCodeParser.Expr3Context):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expression7.
-    def visitExpression7(self, ctx:ZCodeParser.Expression7Context):
+    # Visit a parse tree produced by ZCodeParser#expr4.
+    def visitExpr4(self, ctx:ZCodeParser.Expr4Context):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expression8.
-    def visitExpression8(self, ctx:ZCodeParser.Expression8Context):
+    # Visit a parse tree produced by ZCodeParser#expr5.
+    def visitExpr5(self, ctx:ZCodeParser.Expr5Context):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#index_operator.
-    def visitIndex_operator(self, ctx:ZCodeParser.Index_operatorContext):
+    # Visit a parse tree produced by ZCodeParser#expr6.
+    def visitExpr6(self, ctx:ZCodeParser.Expr6Context):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#function_call.
-    def visitFunction_call(self, ctx:ZCodeParser.Function_callContext):
+    # Visit a parse tree produced by ZCodeParser#expr7.
+    def visitExpr7(self, ctx:ZCodeParser.Expr7Context):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#ignorenull.
-    def visitIgnorenull(self, ctx:ZCodeParser.IgnorenullContext):
+    # Visit a parse tree produced by ZCodeParser#expr8.
+    def visitExpr8(self, ctx:ZCodeParser.Expr8Context):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#ignore.
-    def visitIgnore(self, ctx:ZCodeParser.IgnoreContext):
+    # Visit a parse tree produced by ZCodeParser#literal.
+    def visitLiteral(self, ctx:ZCodeParser.LiteralContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#variable_declaration_statement.
-    def visitVariable_declaration_statement(self, ctx:ZCodeParser.Variable_declaration_statementContext):
+    # Visit a parse tree produced by ZCodeParser#arraytype.
+    def visitArraytype(self, ctx:ZCodeParser.ArraytypeContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#assignment_statement.
-    def visitAssignment_statement(self, ctx:ZCodeParser.Assignment_statementContext):
+    # Visit a parse tree produced by ZCodeParser#numlist.
+    def visitNumlist(self, ctx:ZCodeParser.NumlistContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#exprlist.
+    def visitExprlist(self, ctx:ZCodeParser.ExprlistContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#vardeclstate.
+    def visitVardeclstate(self, ctx:ZCodeParser.VardeclstateContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#assignstate.
+    def visitAssignstate(self, ctx:ZCodeParser.AssignstateContext):
         return self.visitChildren(ctx)
 
 
@@ -149,93 +199,73 @@ class ZCodeVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#if_statement.
-    def visitIf_statement(self, ctx:ZCodeParser.If_statementContext):
+    # Visit a parse tree produced by ZCodeParser#ifstate.
+    def visitIfstate(self, ctx:ZCodeParser.IfstateContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#elif_list.
-    def visitElif_list(self, ctx:ZCodeParser.Elif_listContext):
+    # Visit a parse tree produced by ZCodeParser#elsestate.
+    def visitElsestate(self, ctx:ZCodeParser.ElsestateContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#elif_statement.
-    def visitElif_statement(self, ctx:ZCodeParser.Elif_statementContext):
+    # Visit a parse tree produced by ZCodeParser#elifstatelist.
+    def visitElifstatelist(self, ctx:ZCodeParser.ElifstatelistContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#else_statement.
-    def visitElse_statement(self, ctx:ZCodeParser.Else_statementContext):
+    # Visit a parse tree produced by ZCodeParser#elifstate.
+    def visitElifstate(self, ctx:ZCodeParser.ElifstateContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#for_statement.
-    def visitFor_statement(self, ctx:ZCodeParser.For_statementContext):
+    # Visit a parse tree produced by ZCodeParser#forstate.
+    def visitForstate(self, ctx:ZCodeParser.ForstateContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#break_statement.
-    def visitBreak_statement(self, ctx:ZCodeParser.Break_statementContext):
+    # Visit a parse tree produced by ZCodeParser#breakstate.
+    def visitBreakstate(self, ctx:ZCodeParser.BreakstateContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#continue_statement.
-    def visitContinue_statement(self, ctx:ZCodeParser.Continue_statementContext):
+    # Visit a parse tree produced by ZCodeParser#continuestate.
+    def visitContinuestate(self, ctx:ZCodeParser.ContinuestateContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#return_statement.
-    def visitReturn_statement(self, ctx:ZCodeParser.Return_statementContext):
+    # Visit a parse tree produced by ZCodeParser#returnstate.
+    def visitReturnstate(self, ctx:ZCodeParser.ReturnstateContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#call_statement.
-    def visitCall_statement(self, ctx:ZCodeParser.Call_statementContext):
+    # Visit a parse tree produced by ZCodeParser#functioncallstate.
+    def visitFunctioncallstate(self, ctx:ZCodeParser.FunctioncallstateContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#block_statement.
-    def visitBlock_statement(self, ctx:ZCodeParser.Block_statementContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ZCodeParser#statement.
-    def visitStatement(self, ctx:ZCodeParser.StatementContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ZCodeParser#statement_list.
-    def visitStatement_list(self, ctx:ZCodeParser.Statement_listContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ZCodeParser#array_type.
-    def visitArray_type(self, ctx:ZCodeParser.Array_typeContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ZCodeParser#array_literal.
-    def visitArray_literal(self, ctx:ZCodeParser.Array_literalContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ZCodeParser#list_expression.
-    def visitList_expression(self, ctx:ZCodeParser.List_expressionContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ZCodeParser#numberlist.
-    def visitNumberlist(self, ctx:ZCodeParser.NumberlistContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by ZCodeParser#argument_list.
-    def visitArgument_list(self, ctx:ZCodeParser.Argument_listContext):
+    # Visit a parse tree produced by ZCodeParser#argumentlist.
+    def visitArgumentlist(self, ctx:ZCodeParser.ArgumentlistContext):
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by ZCodeParser#argumentprime.
     def visitArgumentprime(self, ctx:ZCodeParser.ArgumentprimeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#blockstate.
+    def visitBlockstate(self, ctx:ZCodeParser.BlockstateContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#stmtlist.
+    def visitStmtlist(self, ctx:ZCodeParser.StmtlistContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#stmt.
+    def visitStmt(self, ctx:ZCodeParser.StmtContext):
         return self.visitChildren(ctx)
 
 

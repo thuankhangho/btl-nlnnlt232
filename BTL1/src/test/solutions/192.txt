@@ -1,0 +1,6 @@
+func,main,(,),
+,begin,
+,var,num1,<-,readNumber,(,),
+,var,num2,<-,readNumber,(,),
+,end,
+,<EOF>

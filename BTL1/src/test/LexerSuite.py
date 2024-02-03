@@ -2,6 +2,11 @@ import unittest
 from TestUtils import TestLexer
 
 class LexerSuite(unittest.TestCase):
+
+    def test_100(self):
+        input = """ l[3] <- value * aPi """
+        expected = "l,[,3,],<-,value,*,aPi,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 100))
       
     def test_101(self):
         input = """ "This is a string containing tab \\t" """
@@ -450,3 +455,59 @@ class LexerSuite(unittest.TestCase):
         input = """ print "Hello \\nWorld" """
         expected = "print,Hello \\nWorld,<EOF>"
         self.assertTrue(TestLexer.test(input, expected, 190))
+
+    def test_191(self):
+        input = """ func areDivisors(number num1, number num2)
+        return ((num1 % num2 = 0) or (num2 % num1 = 0))
+        """
+        expected = "func,areDivisors,(,number,num1,,,number,num2,),\n,return,(,(,num1,%,num2,=,0,),or,(,num2,%,num1,=,0,),),\n,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 191))
+
+    def test_192(self):
+        input = """ func main()
+        begin
+        var num1 <- readNumber()
+        var num2 <- readNumber()
+        end
+        """
+        expected = "func,main,(,),\n,begin,\n,var,num1,<-,readNumber,(,),\n,var,num2,<-,readNumber,(,),\n,end,\n,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 192))
+
+    def test_193(self):
+        input = """ func test()
+        begin
+        return 1
+        end
+        """
+        expected = "func,test,(,),\n,begin,\n,return,1,\n,end,\n,<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 193))
+
+    def test_194(self):
+        input = """ "'"Hello World'"" """
+        expected = "'\"Hello World'\",<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 194))
+
+    def test_195(self):
+        input = """ "'"I'm studying'"" """
+        expected = "'\"I'm studying'\",<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 195))
+
+    def test_196(self):
+        input = """ if (areDivisors(num1, num2)) writeString("Yes") """
+        expected = "if,(,areDivisors,(,num1,,,num2,),),writeString,(,Yes,),<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 196))
+
+    def test_197(self):
+        input = """ else writeString("No") """
+        expected = "else,writeString,(,No,),<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 197))
+
+    def test_198(self):
+        input = """ else writeString("No\j") """
+        expected = "else,writeString,(,Illegal Escape In String: No\j"
+        self.assertTrue(TestLexer.test(input, expected, 198))
+
+    def test_199(self):
+        input = """ func isPrime(number x) """
+        expected = "func,isPrime,(,number,x,),<EOF>"
+        self.assertTrue(TestLexer.test(input, expected, 199))

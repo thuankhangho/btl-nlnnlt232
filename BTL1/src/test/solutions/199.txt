@@ -1,0 +1,1 @@
+func,isPrime,(,number,x,),<EOF>

@@ -27,7 +27,7 @@ implivardecl: VAR IDENTIFIER ASSIGN expr;
 
 implidynadecl: DYNAMIC IDENTIFIER (ASSIGN expr | );
 
-funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | newlinelist | );
+funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | nullablenewlinelist);
 
 parameterlist: parameterprime | ;
 
@@ -90,7 +90,7 @@ lhs: IDENTIFIER | arraytype;
 
 ifstate: IF LRB expr RRB nullablenewlinelist stmt (elsestate | elifstatelist | );
 
-elsestate: ELSE stmt newlinelist;
+elsestate: ELSE stmt;
 
 elifstatelist: elifstate elifstatelist | elifstate;
 
@@ -108,11 +108,11 @@ functioncallstate: IDENTIFIER LRB argumentlist RRB newlinelist;
 
 argumentlist: argumentprime | ;
 
-argumentprime: expr CM argumentprime | ;
+argumentprime: expr CM argumentprime | expr;
 
-blockstate: BEGIN (stmtlist | newlinelist) END newlinelist; //sua sau
+blockstate: BEGIN newlinelist (stmtlist | ) END newlinelist;
 
-stmtlist: stmt stmtlist | ;
+stmtlist: stmt stmtlist | stmt;
 
 stmt: vardeclstate | assignstate | ifstate | forstate | breakstate | continuestate | returnstate | functioncallstate | blockstate;
 

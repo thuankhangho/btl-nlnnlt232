@@ -1,0 +1,2 @@
+dynamic temp[5] <- 3
+        
