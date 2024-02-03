@@ -1,5 +1,3 @@
  
             func main()
-            ## VO Tien
-            func main() func main(dynamic a) ## VO Tien
         

@@ -69,7 +69,7 @@ expr5: NOT expr5 | expr6;
 
 expr6: MINUS expr6 | expr7;
 
-expr7: expr7 LSB exprlist RSB | expr8;
+expr7: (IDENTIFIER | functioncall) LSB exprlist RSB | expr8;
 
 expr8: IDENTIFIER | literal | LRB expr RRB | functioncall;
 

@@ -2,14 +2,14 @@ import unittest
 from TestUtils import TestParser
 
 class ParserSuite(unittest.TestCase):
-    def test_simple_program1(self):
+    def test_201(self):
         """Simple program: int main() {} """
         input = """func main() return 1
         """
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,201))
     
-    def test_simple_program2(self):
+    def test_202(self):
         """Simple program: int main() {} """
         input = """func main() begin
         end
@@ -17,7 +17,7 @@ class ParserSuite(unittest.TestCase):
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,202))
         
-    def test_simple_program3(self):
+    def test_203(self):
         input = """func main() begin
         aPI[3] <- 3.14
         end
@@ -25,13 +25,13 @@ class ParserSuite(unittest.TestCase):
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,203))
 
-    def test_simple_program3(self):
+    def test_204(self):
         input = """number VoTien
         """
         expect = "successful"
         self.assertTrue(TestParser.test(input,expect,204))
     
-    def test_005(self):
+    def test_205(self):
         """test function declaration"""
         input = """func main()
             begin

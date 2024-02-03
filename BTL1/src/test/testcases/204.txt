@@ -1,5 +1,2 @@
- 
-            bool a["string"]
-            bool a[[1,2]]
-            bool a[1+1]
+number VoTien
         

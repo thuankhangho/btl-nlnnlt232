@@ -15,7 +15,7 @@ program: newline_lit_can_null declist EOF;
 declist: decl declist | decl; // loai 1
 decl: funcdel | vardecl;
 vardecl:(type_decl | imp_decl) newline_lit_can_null;
-type_decl: (NUMBER | BOOL | STRING) ID ( ASSIGNINIT expr)?; //sửa cho Tịnh (thiếu arraytype)
+type_decl: (NUMBER | BOOL | STRING) (ID | array_type) ( ASSIGNINIT expr)?;
 imp_decl: (VAR ID ASSIGNINIT expr) | (DYNAMIC ID (ASSIGNINIT expr)?);
 
 
@@ -36,8 +36,8 @@ var_decl_statement: (type_decl | imp_decl) newline_lit;
 assignment_statement: lhs ASSIGNINIT expr newline_lit;
 lhs:ID | array_type;
 //7.3 if statement
-if_statement:IF LPAREN expr RPAREN newline_lit_can_null stmt (else_statement? | elif_lit); //sửa cho Tịnh (newline_lit_can_null)
-else_statement: ELSE stmt newline_lit; //sửa cho Tịnh (bỏ newline_lit)
+if_statement:IF LPAREN expr RPAREN newline_lit_can_null stmt (else_statement? | elif_lit);
+else_statement: ELSE stmt;
 elif_statement: ELIF LPAREN expr RPAREN stmt;
 elif_lit: elifprime | ;// danh sach cac elif cach nhau boi new_line
 elifprime: elif_statement NEWLINE elifprime | elif_statement;
@@ -83,8 +83,8 @@ expr3: expr3 (ADD | SUB) expr4 | expr4;
 expr4: expr4 (MUl | DIV | MOD) expr5 | expr5;
 expr5: NOT expr5 | expr6;
 expr6: SUB expr6 | expr7;
-expr7: expr7 (LBRACKET index_operator RBRACKET) | expr8;
-expr8: ID | NUMBER_LIT | STRING_LIT | BOOL_LIT | LPAREN expr RPAREN | array_type | function_call; //sửa cho Tịnh (thêm function_call)
+expr7: (ID | function_call) (LBRACKET index_operator RBRACKET) | expr8;
+expr8: ID | NUMBER_LIT | STRING_LIT | BOOL_LIT | LPAREN expr RPAREN | array_type | function_call;
 index_operator:expr COMMA index_operator | expr  ;//loai 3 danh sach cac expr cach nhau boi comma ko rong
 
 
@@ -92,6 +92,8 @@ index_operator:expr COMMA index_operator | expr  ;//loai 3 danh sach cac expr ca
 
 //! --------------------------  Lexical structure ----------------------- //
 //keyword
+BOOL_LIT: TRUE | FALSE;
+
 IF:'if';
 ELSE:'else';
 FOR:'for';
@@ -137,11 +139,11 @@ RPAREN:')';
 LBRACKET:'[';
 RBRACKET:']';
 COMMA:',';
-// TODO Identifiers
+// Identifier
 ID: [a-zA-Z_][a-zA-Z0-9_]*;
 
 
-// TODO Literal 
+// Literal 
 //! STRING_LIT nhớ dùng python bỏ đi " " đầu và cuối
 NUMBER_LIT: INT DECL? EXPONENT?;
 fragment INT:[0-9]+;
@@ -154,11 +156,6 @@ STRING_LIT: '"' (ALLOW)* '"' {self.text = self.text[1:-1];};
 fragment ALLOW: (~[\r\n\f\\"] | '\\' [bfrnt'\\] | '\'"' );
 fragment ILLEGAL:[\r\f] | '\\' ~[bfrnt'\\]; // ki tu ko cho phep 
 
-BOOL_LIT: TRUE | FALSE; //sửa cho Tịnh (đổi chỗ)
-
-//
-
-
 // NEWLINE COMMENTS WS
 //! vì NEWLINE là kí tự kết thúc giống với ';' trong C nên lấy để xử lí bước sau
 //! vì ngôn ngữ này COMMENTS chỉ 1 hàng không chung với mấy biểu thức khác nên bắt để xử lí thứ tự các bước sau
@@ -167,7 +164,7 @@ NEWLINE: [\n]; //
 COMMENTS: '##' ~[\n\r\f]* -> skip; // Comments
 WS : [ \t\r]+ -> skip ; // skip spaces, tabs
 
-// TODO ERROR
+// ERROR
 //! hiện thực  UNCLOSE_STRING và ILLEGAL_ESCAPE code antlr và python tận dụng lại ý tưởng STRING_LIT
 ERROR_CHAR: . {raise ErrorToken(self.text)};
 UNCLOSE_STRING: '"' ( ALLOW)* ('\r\n' | '\n' | EOF)

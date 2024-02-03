@@ -1,3 +1,7 @@
- 
-            bool a[1,]
+func main()
+            begin
+                var j <- 1
+                for i until i >= 10 by 1
+                    writeNumber(i)
+            end
         
