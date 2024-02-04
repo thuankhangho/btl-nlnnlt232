@@ -1,0 +1,6 @@
+func main()
+        begin
+            if (i == 3) continue
+            else writeInt(1)
+        end
+        

@@ -1,3 +1,2 @@
-
-            number x <- x number x <- y
+func test() return
         

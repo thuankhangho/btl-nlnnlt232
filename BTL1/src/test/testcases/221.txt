@@ -1,6 +1,10 @@
- 
-            var VoTien <- a()
-            var VoTien <- a(1,2)
-            var VoTien <- a(x,array[2])[2]
-            var VoTien <- a(z,k[3] ... 2)[1,2]
+func foo(number a[5], string b)
+        begin
+            var i <- 0
+            for i until i >= 5 by 1
+                begin
+                    a[i] <- i * i + 5
+                end
+            return -1
+        end
         

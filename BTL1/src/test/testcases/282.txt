@@ -1,0 +1,7 @@
+func test() begin
+        if (a > 10) return writeString(a)
+        elif (b > 10) return a[5]
+        elif (c > 10) return 3
+        else return false
+        end
+        

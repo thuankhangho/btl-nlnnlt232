@@ -1,0 +1,6 @@
+func main()
+        begin
+            string message <- "This is an unclosed string literal"
+            writeString(message)
+        end
+        

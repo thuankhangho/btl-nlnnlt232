@@ -204,6 +204,11 @@ class ZCodeVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ZCodeParser#elseelifparts.
+    def visitElseelifparts(self, ctx:ZCodeParser.ElseelifpartsContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by ZCodeParser#elsestate.
     def visitElsestate(self, ctx:ZCodeParser.ElsestateContext):
         return self.visitChildren(ctx)

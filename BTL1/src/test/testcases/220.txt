@@ -1,2 +1,10 @@
-var VoTien <- a[]
+func main()
+            begin
+                begin
+                    begin
+                        var a <- 10
+                        number a <- 10
+                    end
+                end
+            end
         

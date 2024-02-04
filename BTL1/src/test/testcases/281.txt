@@ -1,5 +1,2 @@
-    
-        func a()
-            return 
-        var a <- []
+var a[3] <- [2,"why not",false]
         

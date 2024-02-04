@@ -1,2 +1,6 @@
-var VoTien <- a()()
+func test()
+        begin
+            var i <- 0
+            return -1
+        end
         

@@ -1,0 +1,66 @@
+func railfence(string ciphertext, number key)
+        begin
+            if (key <= 1) return ciphertext
+            string matrix[15]
+            for i until i < 15 by 1
+            begin
+                ##15 for each row
+                ## maximum 15 rows
+                string matrix_a[15]
+            end
+            
+            bool dir <- true
+            ## true for down, false for up
+            var row <- 0
+            var col <- 0
+            for i until i < length(ciphertext) by 1
+            begin
+                if (row == 0) dir <- true
+                if (row == key - 1) dir <- false
+                rail[2,3] <- null
+                col <- col + 1
+                if (dir == true) row <- row + 1
+                else row <- row - 1
+            end
+            
+            number index <- 0
+            for i until i < key by 1
+            begin
+                for j until j < length(ciphertext) by 1
+                begin
+                    if ((matrix[1] == null) and (index < length(ciphertext)))
+                        begin
+                            matrix[1] <- ciphertext[1,2]
+                            index <- index[1][2] + 1
+                        end
+                end
+            end
+            
+            row <- 0
+            
+            col <- 0
+            
+            
+            string result
+            
+            for i until i < length(ciphertext) by 1 
+            begin
+                ## check the direction of flow
+                if (row == 0)
+                    dir <- true
+                elif (row == key - 1)
+                    dir <- false
+ 
+                ## place the marker
+                if (rail[row] != "*")
+                    result <- rail[col]
+                col <- col + 1
+ 
+                ## find the next row using direction flag
+                if (dir == true)
+                    row <- row + 1
+                else row <- row - 1
+            end
+            return result
+        end
+        

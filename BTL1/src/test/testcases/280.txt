@@ -1,4 +1,2 @@
-    
-        func a()
-            return if x <= 1 return false
+number a[2] <- [1,2]
         

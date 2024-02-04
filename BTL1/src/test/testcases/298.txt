@@ -1,0 +1,5 @@
+dynamic a[2]
+        func main()
+        begin
+        end
+        

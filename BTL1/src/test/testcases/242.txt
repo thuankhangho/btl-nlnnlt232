@@ -1,0 +1,13 @@
+func main()
+        begin
+            if (x == 5)
+            begin
+                return 0
+            end
+            elif (x == 6)
+            begin
+                return x
+            end
+            else continue ##stop
+        end
+        

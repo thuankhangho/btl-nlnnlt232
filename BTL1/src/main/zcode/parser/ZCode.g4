@@ -73,7 +73,7 @@ expr7: (IDENTIFIER | functioncall) LSB exprlist RSB | expr8;
 
 expr8: IDENTIFIER | literal | LRB expr RRB | functioncall;
 
-literal: NUMLIT | BOOLLIT | STRINGLIT | arraytype;
+literal: NUMLIT | BOOLLIT | STRINGLIT | arraytype | arraylit;
 
 arraytype: IDENTIFIER LSB numlist RSB;
 
@@ -88,7 +88,9 @@ assignstate: lhs ASSIGN expr newlinelist;
 
 lhs: IDENTIFIER | arraytype;
 
-ifstate: IF LRB expr RRB nullablenewlinelist stmt (elsestate | elifstatelist | );
+ifstate: IF LRB expr RRB nullablenewlinelist stmt elseelifparts;
+
+elseelifparts: elsestate elseelifparts | elifstatelist elseelifparts | ;
 
 elsestate: ELSE stmt;
 
@@ -165,7 +167,7 @@ RSB: ']';
 CM: ',';
 NEWLINE: '\n';
 
-LINECMT: '##' .*? ('\n'|EOF) -> skip;
+LINECMT: '##' ~[\n\r\f]* -> skip;
 
 //Literals
 NUMLIT: INTEGER DECIMAL? EXPONENT?;

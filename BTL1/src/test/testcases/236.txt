@@ -1,0 +1,20 @@
+var x <- 65
+        func test(number n)
+        begin
+            if (n == 0) return true
+            else return false
+        end
+        
+        func _inc()
+        
+        func main()
+        begin
+            var delta <- test(3)
+            writeInt(delta)
+        end
+        
+        func _inc()
+        begin
+            n <- n + delta
+        end
+        
