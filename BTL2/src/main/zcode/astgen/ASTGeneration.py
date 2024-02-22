@@ -11,8 +11,8 @@ class ASTGeneration(ZCodeVisitor):
     # program: nullablenewlinelist decllist EOF;
     def visitProgram(self, ctx: ZCodeParser.ProgramContext):
         return Program(self.visit(ctx.decllist()))
-        # return Program([Id(ctx.IDENTIFIER())])
-    
+
+
     # decllist: decl decllist | decl;
     def visitDecllist(self, ctx: ZCodeParser.DecllistContext):
         if ctx.getChildCount() == 1:
@@ -24,9 +24,7 @@ class ASTGeneration(ZCodeVisitor):
         if ctx.funcdecl():
             return self.visit(ctx.funcdecl())
         return self.visit(ctx.vardecl())
-    
-    def visitFuncDecl(self, ctx: ZCodeParser.FuncdeclContext):
-        print("Hello")
+
 
     # vardecl: (typdecl | implidecl) nullablenewlinelist;
     def visitVarDecl(self, ctx: ZCodeParser.VardeclContext):
@@ -42,9 +40,51 @@ class ASTGeneration(ZCodeVisitor):
             return VarDecl(Id(ctx.IDENTIFIER().getText()), NumberType(), None, None)
         return VarDecl(self.visit(ctx.arraytype()), NumberType(), None, None)
 
-    # arraytype: IDENTIFIER LSB numlist RSB;
 
-    # numlist: NUMLIT CM numlist | NUMLIT;
+    # Visit a parse tree produced by ZCodeParser#implidecl.
+    def visitImplidecl(self, ctx:ZCodeParser.ImplideclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#implivardecl.
+    def visitImplivardecl(self, ctx:ZCodeParser.ImplivardeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#implidynadecl.
+    def visitImplidynadecl(self, ctx:ZCodeParser.ImplidynadeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#funcdecl.
+    def visitFuncdecl(self, ctx:ZCodeParser.FuncdeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#parameterlist.
+    def visitParameterlist(self, ctx:ZCodeParser.ParameterlistContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#parameterprime.
+    def visitParameterprime(self, ctx:ZCodeParser.ParameterprimeContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#param.
+    def visitParam(self, ctx:ZCodeParser.ParamContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#newlinelist.
+    def visitNewlinelist(self, ctx:ZCodeParser.NewlinelistContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#nullablenewlinelist.
+    def visitNullablenewlinelist(self, ctx:ZCodeParser.NullablenewlinelistContext):
+        return self.visitChildren(ctx)
+
 
     # typ: NUMBER | BOOL | STRING;
     def visitTyp(self, ctx: ZCodeParser.TypContext):
@@ -53,6 +93,87 @@ class ASTGeneration(ZCodeVisitor):
         elif ctx.BOOL():
             return BoolType()
         return StringType()
+
+
+    # Visit a parse tree produced by ZCodeParser#arraylit.
+    def visitArraylit(self, ctx:ZCodeParser.ArraylitContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#elementlist.
+    def visitElementlist(self, ctx:ZCodeParser.ElementlistContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#functioncall.
+    def visitFunctioncall(self, ctx:ZCodeParser.FunctioncallContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#relational.
+    def visitRelational(self, ctx:ZCodeParser.RelationalContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#logical.
+    def visitLogical(self, ctx:ZCodeParser.LogicalContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#adding.
+    def visitAdding(self, ctx:ZCodeParser.AddingContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#multiplying.
+    def visitMultiplying(self, ctx:ZCodeParser.MultiplyingContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#expr.
+    def visitExpr(self, ctx:ZCodeParser.ExprContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#expr1.
+    def visitExpr1(self, ctx:ZCodeParser.Expr1Context):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#expr2.
+    def visitExpr2(self, ctx:ZCodeParser.Expr2Context):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#expr3.
+    def visitExpr3(self, ctx:ZCodeParser.Expr3Context):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#expr4.
+    def visitExpr4(self, ctx:ZCodeParser.Expr4Context):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#expr5.
+    def visitExpr5(self, ctx:ZCodeParser.Expr5Context):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#expr6.
+    def visitExpr6(self, ctx:ZCodeParser.Expr6Context):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#expr7.
+    def visitExpr7(self, ctx:ZCodeParser.Expr7Context):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by ZCodeParser#expr8.
+    def visitExpr8(self, ctx:ZCodeParser.Expr8Context):
+        return self.visitChildren(ctx)
+
 
     # literal: NUMLIT | boollit | STRINGLIT | arraytype;
     def visitLiteral(self, ctx: ZCodeParser.LiteralContext):
@@ -63,6 +184,139 @@ class ASTGeneration(ZCodeVisitor):
         elif ctx.STRINGLIT():
             return StringLiteral(ctx.STRINGLIT().getText())
         return self.visit(ctx.arraytype())
+
+
+    # arraytype: IDENTIFIER LSB numlist RSB;
+    def visitArraytype(self, ctx:ZCodeParser.ArraytypeContext):
+        return ArrayCell()
+
+
+    # numlist: NUMLIT CM numlist | NUMLIT;
+    def visitNumlist(self, ctx:ZCodeParser.NumlistContext):
+        return self.visitChildren(ctx)
+
+
+    # exprlist: expr CM exprlist | expr;
+    def visitExprlist(self, ctx:ZCodeParser.ExprlistContext):
+        if ctx.getChildCount() == 1:
+            return [self.visit(ctx.expr())]
+        return [self.visit(ctx.expr())] + self.visit(ctx.exprlist())
+
+
+    # vardeclstate: (typdecl | implidecl) newlinelist;
+    def visitVardeclstate(self, ctx:ZCodeParser.VardeclstateContext):
+        if ctx.typdecl():
+            return self.visit(ctx.typdecl())
+        return self.visit(ctx.implidecl())
+
+
+    # assignstate: lhs ASSIGN expr newlinelist;
+    def visitAssignstate(self, ctx:ZCodeParser.AssignstateContext):
+        return Assign(self.visit(ctx.lhs()), self.visit(ctx.expr()))
+
+
+    # lhs: IDENTIFIER | arraytype;
+    def visitLhs(self, ctx:ZCodeParser.LhsContext):
+        return ctx.IDENTIFIER().getText() if ctx.IDENTIFIER else self.visit(ctx.arraytype())
+
+
+    # ifstate: IF LRB expr RRB nullablenewlinelist stmt (elifstatelist | ) (elsestate | );
+    def visitIfstate(self, ctx:ZCodeParser.IfstateContext):
+        return If(self.visit(ctx.expr()), self.visit(ctx.stmt()), self.visit(ctx.elsestatelist()), self.visit(ctx.elsestate()))
+        
+
+    # elsestate: ELSE stmt;
+    def visitElsestate(self, ctx:ZCodeParser.ElsestateContext):
+        return self.visit(ctx.stmt())
+
+
+    # elifstatelist: elifstate elifstatelist | elifstate;
+    def visitElifstatelist(self, ctx:ZCodeParser.ElifstatelistContext):
+        if ctx.getChildCount() == 1:
+            return [self.visit(ctx.elifstate())]
+        return [self.visit(ctx.elifstate())] + self.visit(ctx.elifstatelist())
+
+
+    # elifstate: ELIF LRB expr RRB nullablenewlinelist stmt;
+    def visitElifstate(self, ctx:ZCodeParser.ElifstateContext):
+        return If(self.visit(ctx.expr()), self.visit(ctx.stmt()))
+
+
+    # forstate: FOR IDENTIFIER UNTIL expr BY expr nullablenewlinelist stmt;
+    def visitForstate(self, ctx:ZCodeParser.ForstateContext):
+        return For(ctx.IDENTIFIER().getText(), self.visit(ctx.expr()[0]), self.visit(ctx.expr()[1]), self.visit(ctx.stmt()))
+
+
+    # breakstate: BREAK nullablenewlinelist;
+    def visitBreakstate(self, ctx:ZCodeParser.BreakstateContext):
+        return Break()
+
+
+    # continuestate: CONTINUE nullablenewlinelist;
+    def visitContinuestate(self, ctx:ZCodeParser.ContinuestateContext):
+        return Continue()
+
+
+    # RETURN (expr | ) newlinelist;
+    def visitReturnstate(self, ctx:ZCodeParser.ReturnstateContext):
+        return Return(self.visit(ctx.expr()))
+
+
+    # functioncallstate: IDENTIFIER LRB argumentlist RRB newlinelist;
+    def visitFunctioncallstate(self, ctx:ZCodeParser.FunctioncallstateContext):
+        return CallStmt(ctx.IDENTIFIER().getText(), self.visit(ctx.argumentlist()))
+
+
+    # argumentlist: argumentprime | ;
+    def visitArgumentlist(self, ctx:ZCodeParser.ArgumentlistContext):
+        if ctx.argumentprime():
+            return self.visit(ctx.argumentprime())
+        return None
+
+
+    # argumentprime: expr CM argumentprime | expr;
+    def visitArgumentprime(self, ctx:ZCodeParser.ArgumentprimeContext):
+        if ctx.expr():
+            return [self.visit(ctx.expr())]
+        expr = self.visit(ctx.expr())
+        argumentprime = self.visit(ctx.argumentprime())
+        return [self.visit(ctx.expr())] + self.visit(ctx.argumentprime())
+
+
+    # blockstate: BEGIN newlinelist (stmtlist | ) END newlinelist;
+    def visitBlockstate(self, ctx:ZCodeParser.BlockstateContext):
+        if ctx.stmtlist():
+            return Block(self.visit(ctx.stmtlist()))
+        return Block()
+
+
+    # stmtlist: stmt stmtlist | stmt;
+    def visitStmtlist(self, ctx:ZCodeParser.StmtlistContext):
+        if ctx.getChildCount() == 1:
+            return [self.visit(ctx.stmt())]
+        return [self.visit(ctx.stmt())] + self.visit(ctx.stmtlist())
+
+
+    # stmt: vardeclstate | assignstate | ifstate | forstate | breakstate | continuestate | returnstate | functioncallstate | blockstate;
+    def visitStmt(self, ctx:ZCodeParser.StmtContext):
+        if ctx.vardeclstate():
+            return self.visit(ctx.vardeclstate())
+        elif ctx.assignstate():
+            return self.visit(ctx.assignstate())
+        elif ctx.ifstate():
+            return self.visit(ctx.ifstate())
+        elif ctx.forstate():
+            return self.visit(ctx.forstate())
+        elif ctx.breakstate():
+            return self.visit(ctx.breakstate())
+        elif ctx.continuestate():
+            return self.visit(ctx.continuestate())
+        elif ctx.returnstate():
+            return self.visit(ctx.returnstate())
+        elif ctx.functioncallstate():
+            return self.visit(ctx.functioncallstate())
+        elif ctx.blockstate():
+            return self.visit(ctx.blockstate())
     
     # boollit: TRUE | FALSE;
     def visitBoollit(self, ctx: ZCodeParser.BoollitContext):

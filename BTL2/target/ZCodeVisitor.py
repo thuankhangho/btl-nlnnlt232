@@ -269,5 +269,10 @@ class ZCodeVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by ZCodeParser#boollit.
+    def visitBoollit(self, ctx:ZCodeParser.BoollitContext):
+        return self.visitChildren(ctx)
+
+
 
 del ZCodeParser

@@ -88,7 +88,7 @@ assignstate: lhs ASSIGN expr newlinelist;
 
 lhs: IDENTIFIER | arraytype;
 
-ifstate: IF LRB expr RRB nullablenewlinelist stmt (elsestate | elifstatelist | );
+ifstate: IF LRB expr RRB nullablenewlinelist stmt (elifstatelist | ) (elsestate | );
 
 elsestate: ELSE stmt;
 
