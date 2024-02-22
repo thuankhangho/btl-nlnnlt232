@@ -56,34 +56,39 @@ class ASTGeneration(ZCodeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#funcdecl.
+    # funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | nullablenewlinelist);
     def visitFuncdecl(self, ctx:ZCodeParser.FuncdeclContext):
-        return self.visitChildren(ctx)
+        return FuncDecl(ctx.IDENTIFIER().getText, self.visit(ctx.parameterlist()))
 
 
-    # Visit a parse tree produced by ZCodeParser#parameterlist.
+    # parameterlist: parameterprime | ;
     def visitParameterlist(self, ctx:ZCodeParser.ParameterlistContext):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 0: return None
+        return self.visit(ctx.parameterprime())
 
 
-    # Visit a parse tree produced by ZCodeParser#parameterprime.
+    # parameterprime: param CM parameterprime | param;
     def visitParameterprime(self, ctx:ZCodeParser.ParameterprimeContext):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return [self.visit(ctx.param())]
+        return [self.visit(ctx.param())] + self.visit(ctx.parameterprime())
 
 
-    # Visit a parse tree produced by ZCodeParser#param.
+    # param: typ (IDENTIFIER | arraytype);
     def visitParam(self, ctx:ZCodeParser.ParamContext):
-        return self.visitChildren(ctx)
+        if ctx.IDENTIFIER():
+            return (self.visit(ctx.typ()), ctx.IDENTIFIER().getText())
+        return (self.visit(ctx.typ()), self.visit(ctx.arraytype()))
 
 
-    # Visit a parse tree produced by ZCodeParser#newlinelist.
+    # newlinelist: NEWLINE newlinelist | NEWLINE;
     def visitNewlinelist(self, ctx:ZCodeParser.NewlinelistContext):
-        return self.visitChildren(ctx)
+        pass
 
 
-    # Visit a parse tree produced by ZCodeParser#nullablenewlinelist.
+    # nullablenewlinelist: NEWLINE nullablenewlinelist | ;
     def visitNullablenewlinelist(self, ctx:ZCodeParser.NullablenewlinelistContext):
-        return self.visitChildren(ctx)
+        pass
 
 
     # typ: NUMBER | BOOL | STRING;
@@ -95,76 +100,106 @@ class ASTGeneration(ZCodeVisitor):
         return StringType()
 
 
-    # Visit a parse tree produced by ZCodeParser#arraylit.
+    # arraylit: LSB elementlist RSB;
     def visitArraylit(self, ctx:ZCodeParser.ArraylitContext):
-        return self.visitChildren(ctx)
+        return ArrayLiteral(self.visit(ctx.elementlist))
 
 
-    # Visit a parse tree produced by ZCodeParser#elementlist.
+    # elementlist: expr CM elementlist | expr;
     def visitElementlist(self, ctx:ZCodeParser.ElementlistContext):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return [self.visit(ctx.expr())]
+        return [self.visit(ctx.expr())] + self.visit(ctx.elementlist())
 
 
-    # Visit a parse tree produced by ZCodeParser#functioncall.
+    # functioncall: IDENTIFIER LRB argumentlist RRB;
     def visitFunctioncall(self, ctx:ZCodeParser.FunctioncallContext):
-        return self.visitChildren(ctx)
+        return CallExpr(ctx.IDENTIFIER().getText(), self.visit(ctx.argumentlist()))
 
 
-    # Visit a parse tree produced by ZCodeParser#relational.
+    # relational: EQUAL | CMPRSTR | DIFF | LT | GT | LE | GE;
     def visitRelational(self, ctx:ZCodeParser.RelationalContext):
-        return self.visitChildren(ctx)
+        if ctx.EQUAL():
+            return ctx.EQUAL().getText()
+        elif ctx.CMPRSTR():
+            return ctx.CMPRSTR().getText()
+        elif ctx.DIFF():
+            return ctx.DIFF().getText()
+        elif ctx.LT():
+            return ctx.LT().getText()
+        elif ctx.GT():
+            return ctx.GT().getText()
+        elif ctx.LE():
+            return ctx.LE().getText()
+        return ctx.GE().getText()
 
-
-    # Visit a parse tree produced by ZCodeParser#logical.
+    # logical: AND | OR;
     def visitLogical(self, ctx:ZCodeParser.LogicalContext):
-        return self.visitChildren(ctx)
+        if ctx.AND():
+            return ctx.AND().getText()
+        return ctx.OR().getText()
 
 
-    # Visit a parse tree produced by ZCodeParser#adding.
+    # adding: PLUS | MINUS;
     def visitAdding(self, ctx:ZCodeParser.AddingContext):
-        return self.visitChildren(ctx)
+        if ctx.PLUS():
+            return ctx.PLUS().getText()
+        return ctx.MINUS().getText()
 
-
-    # Visit a parse tree produced by ZCodeParser#multiplying.
+    # multiplying: MULTIPLY | DIVIDE | MOD;
     def visitMultiplying(self, ctx:ZCodeParser.MultiplyingContext):
-        return self.visitChildren(ctx)
+        if ctx.MULTIPLY():
+            return ctx.MULTIPLY().getText()
+        elif ctx.DIVIDE():
+            return ctx.DIVIDE().getText()
+        return ctx.MOD().getText()
 
-
-    # Visit a parse tree produced by ZCodeParser#expr.
+    # expr: expr1 CONCAT expr1 | expr1;
     def visitExpr(self, ctx:ZCodeParser.ExprContext):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return self.visit(ctx.expr1())
+        return BinaryOp(ctx.CONCAT().getText(), self.visit(ctx.expr1()), self.visit(ctx.expr1()))
 
 
-    # Visit a parse tree produced by ZCodeParser#expr1.
+    # expr1: expr2 relational expr2 | expr2;
     def visitExpr1(self, ctx:ZCodeParser.Expr1Context):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return self.visit(ctx.expr2())
+        return BinaryOp(self.visit(ctx.relational()), self.visit(ctx.expr2()), self.visit(ctx.expr2()))
 
 
-    # Visit a parse tree produced by ZCodeParser#expr2.
+    # expr2: expr2 logical expr3 | expr3;
     def visitExpr2(self, ctx:ZCodeParser.Expr2Context):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return self.visit(ctx.expr3())
+        return BinaryOp(self.visit(ctx.logical()), self.visit(ctx.expr2()), self.visit(ctx.expr3()))
 
-
-    # Visit a parse tree produced by ZCodeParser#expr3.
+    # expr3: expr3 adding expr4 | expr4;
     def visitExpr3(self, ctx:ZCodeParser.Expr3Context):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return self.visit(ctx.expr4())
+        return BinaryOp(self.visit(ctx.adding()), self.visit(ctx.expr3()), self.visit(ctx.expr4()))
 
 
-    # Visit a parse tree produced by ZCodeParser#expr4.
+    # expr4: expr4 multiplying expr5 | expr5;
     def visitExpr4(self, ctx:ZCodeParser.Expr4Context):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return self.visit(ctx.expr5())
+        return BinaryOp(self.visit(ctx.multiplying()), self.visit(ctx.expr4()), self.visit(ctx.expr5()))
 
 
-    # Visit a parse tree produced by ZCodeParser#expr5.
+    # expr5: NOT expr5 | expr6;
     def visitExpr5(self, ctx:ZCodeParser.Expr5Context):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return self.visit(ctx.expr6())
+        return UnaryOp(ctx.NOT().getText(), self.visit(ctx.expr5()))
 
 
     # expr6: MINUS expr6 | expr7;
     def visitExpr6(self, ctx:ZCodeParser.Expr6Context):
         if ctx.getChildCount() == 1:
             return self.visit(ctx.expr7())
-        return self.visit(ctx.expr6())
+        return UnaryOp(ctx.MINUS().getText(),self.visit(ctx.expr6()))
 
 
     # expr7: (IDENTIFIER | functioncall) LSB exprlist RSB | expr8;
@@ -176,7 +211,6 @@ class ASTGeneration(ZCodeVisitor):
         elif ctx.functioncall():
             return ArrayCell(self.visit(ctx.functioncall()), self.visit(ctx.exprlist()))
         
-
 
     # expr8: IDENTIFIER | literal | LRB expr RRB | functioncall;
     def visitExpr8(self, ctx:ZCodeParser.Expr8Context):
