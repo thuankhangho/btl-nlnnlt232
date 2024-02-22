@@ -160,19 +160,33 @@ class ASTGeneration(ZCodeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by ZCodeParser#expr6.
+    # expr6: MINUS expr6 | expr7;
     def visitExpr6(self, ctx:ZCodeParser.Expr6Context):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return self.visit(ctx.expr7())
+        return self.visit(ctx.expr6())
 
 
-    # Visit a parse tree produced by ZCodeParser#expr7.
+    # expr7: (IDENTIFIER | functioncall) LSB exprlist RSB | expr8;
     def visitExpr7(self, ctx:ZCodeParser.Expr7Context):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return self.visit(ctx.expr8())
+        elif ctx.IDENTIFIER():
+            return ArrayCell(ctx.IDENTIFIER().getText(), self.visit(ctx.exprlist()))
+        elif ctx.functioncall():
+            return ArrayCell(self.visit(ctx.functioncall()), self.visit(ctx.exprlist()))
+        
 
 
-    # Visit a parse tree produced by ZCodeParser#expr8.
+    # expr8: IDENTIFIER | literal | LRB expr RRB | functioncall;
     def visitExpr8(self, ctx:ZCodeParser.Expr8Context):
-        return self.visitChildren(ctx)
+        if ctx.IDENTIFIER():
+            return Id(ctx.IDENTIFIER().getText())
+        elif ctx.literal():
+            return self.visit(ctx.literal())
+        elif ctx.expr():
+            return self.visit(ctx.expr())
+        return self.visit(ctx.functioncall())
 
 
     # literal: NUMLIT | boollit | STRINGLIT | arraytype;
@@ -188,12 +202,14 @@ class ASTGeneration(ZCodeVisitor):
 
     # arraytype: IDENTIFIER LSB numlist RSB;
     def visitArraytype(self, ctx:ZCodeParser.ArraytypeContext):
-        return ArrayCell()
+        return ArrayCell(Id(ctx.IDENTIFIER().getText(),), self.visit(ctx.numlist()))
 
 
     # numlist: NUMLIT CM numlist | NUMLIT;
     def visitNumlist(self, ctx:ZCodeParser.NumlistContext):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return [NumberLiteral(float(ctx.NUMLIT().getText()))]
+        return [NumberLiteral(float(ctx.NUMLIT().getText()))] + self.visit(ctx.numlist())
 
 
     # exprlist: expr CM exprlist | expr;
@@ -220,9 +236,12 @@ class ASTGeneration(ZCodeVisitor):
         return ctx.IDENTIFIER().getText() if ctx.IDENTIFIER else self.visit(ctx.arraytype())
 
 
-    # ifstate: IF LRB expr RRB nullablenewlinelist stmt (elifstatelist | ) (elsestate | );
+    # ifstate: IF LRB expr RRB nullablenewlinelist stmt elifstatelist (elsestate | );
     def visitIfstate(self, ctx:ZCodeParser.IfstateContext):
-        return If(self.visit(ctx.expr()), self.visit(ctx.stmt()), self.visit(ctx.elsestatelist()), self.visit(ctx.elsestate()))
+        elifstatelist = self.visit(ctx.elifstatelist())
+        if ctx.elsestate():
+            return If(self.visit(ctx.expr()), self.visit(ctx.stmt()), elifstatelist, self.visit(ctx.elsestate()))
+        return If(self.visit(ctx.expr()), self.visit(ctx.stmt()), elifstatelist, None)
         
 
     # elsestate: ELSE stmt;
@@ -230,16 +249,15 @@ class ASTGeneration(ZCodeVisitor):
         return self.visit(ctx.stmt())
 
 
-    # elifstatelist: elifstate elifstatelist | elifstate;
+    # elifstatelist: elifstate elifstatelist | ;
     def visitElifstatelist(self, ctx:ZCodeParser.ElifstatelistContext):
-        if ctx.getChildCount() == 1:
-            return [self.visit(ctx.elifstate())]
+        if ctx.getChildCount() == 0: return []
         return [self.visit(ctx.elifstate())] + self.visit(ctx.elifstatelist())
 
 
     # elifstate: ELIF LRB expr RRB nullablenewlinelist stmt;
     def visitElifstate(self, ctx:ZCodeParser.ElifstateContext):
-        return If(self.visit(ctx.expr()), self.visit(ctx.stmt()))
+        return (self.visit(ctx.expr()), self.visit(ctx.stmt()))
 
 
     # forstate: FOR IDENTIFIER UNTIL expr BY expr nullablenewlinelist stmt;
