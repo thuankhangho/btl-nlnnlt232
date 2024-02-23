@@ -19,6 +19,7 @@ class ASTGeneration(ZCodeVisitor):
             return [self.visit(ctx.decl())]
         return [self.visit(ctx.decl())] + self.visit(ctx.decllist())
     
+    
     # decl: funcdecl | vardecl;
     def visitDecl(self, ctx: ZCodeParser.DeclContext):
         if ctx.funcdecl():
@@ -27,38 +28,42 @@ class ASTGeneration(ZCodeVisitor):
 
 
     # vardecl: (typdecl | implidecl) nullablenewlinelist;
-    def visitVarDecl(self, ctx: ZCodeParser.VardeclContext):
-        # print(self.visit(ctx.typdecl()))
+    def visitVardecl(self, ctx: ZCodeParser.VardeclContext):
         if ctx.typdecl():
             return self.visit(ctx.typdecl())
         return self.visit(ctx.implidecl())
     
+    
     # typdecl: typ (IDENTIFIER | arraytype) (ASSIGN expr | );
-    def visitTypDecl(self, ctx: ZCodeParser.TypdeclContext):
+    def visitTypdecl(self, ctx: ZCodeParser.TypdeclContext):
         # print(VarDecl(Id(ctx.IDENTIFIER().getText()), NumberType(), None, None))
         if ctx.IDENTIFIER():
             return VarDecl(Id(ctx.IDENTIFIER().getText()), NumberType(), None, None)
         return VarDecl(self.visit(ctx.arraytype()), NumberType(), None, None)
 
 
-    # Visit a parse tree produced by ZCodeParser#implidecl.
+    # implidecl: implivardecl | implidynadecl;
     def visitImplidecl(self, ctx:ZCodeParser.ImplideclContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.implivardecl()) if ctx.implivardecl() else self.visit(ctx.implidynadecl())
 
 
-    # Visit a parse tree produced by ZCodeParser#implivardecl.
+    # implivardecl: VAR IDENTIFIER ASSIGN expr;
     def visitImplivardecl(self, ctx:ZCodeParser.ImplivardeclContext):
-        return self.visitChildren(ctx)
+        return VarDecl(ctx.IDENTIFIER().getText(), None, "var", self.visit(ctx.expr()))
 
 
-    # Visit a parse tree produced by ZCodeParser#implidynadecl.
+    # implidynadecl: DYNAMIC IDENTIFIER (ASSIGN expr | );
     def visitImplidynadecl(self, ctx:ZCodeParser.ImplidynadeclContext):
-        return self.visitChildren(ctx)
+        if ctx.expr():
+            return VarDecl(ctx.IDENTIFIER().getText(), None, "dynamic", self.visit(ctx.expr()))
+        return VarDecl(ctx.IDENTIFIER().getText(), None, "dynamic", None)
 
 
     # funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | nullablenewlinelist);
     def visitFuncdecl(self, ctx:ZCodeParser.FuncdeclContext):
-        return FuncDecl(ctx.IDENTIFIER().getText, self.visit(ctx.parameterlist()))
+        if ctx.returnstate():
+            return FuncDecl(ctx.IDENTIFIER().getText, self.visit(ctx.parameterlist()), self.visit(ctx.returnstate()))
+        return FuncDecl(ctx.IDENTIFIER().getText, self.visit(ctx.parameterlist()), self.visit(ctx.blockstate()))
 
 
     # parameterlist: parameterprime | ;
