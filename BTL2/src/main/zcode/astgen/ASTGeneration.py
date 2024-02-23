@@ -37,9 +37,7 @@ class ASTGeneration(ZCodeVisitor):
     # typdecl: typ (IDENTIFIER | arraytype) (ASSIGN expr | );
     def visitTypdecl(self, ctx: ZCodeParser.TypdeclContext):
         # print(VarDecl(Id(ctx.IDENTIFIER().getText()), NumberType(), None, None))
-        if ctx.IDENTIFIER():
-            return VarDecl(Id(ctx.IDENTIFIER().getText()), NumberType(), None, None)
-        return VarDecl(self.visit(ctx.arraytype()), NumberType(), None, None)
+        pass
 
 
     # implidecl: implivardecl | implidynadecl;
