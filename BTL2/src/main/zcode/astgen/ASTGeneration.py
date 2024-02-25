@@ -37,7 +37,17 @@ class ASTGeneration(ZCodeVisitor):
     # typdecl: typ (IDENTIFIER | arraytype) (ASSIGN expr | );
     def visitTypdecl(self, ctx: ZCodeParser.TypdeclContext):
         # print(VarDecl(Id(ctx.IDENTIFIER().getText()), NumberType(), None, None))
-        pass
+        typ = self.visit(ctx.typ())
+        if ctx.expr():
+            if ctx.IDENTIFIER():
+                return VarDecl(Id(ctx.IDENTIFIER().getText()), typ, None, self.visit(ctx.expr()))
+            if ctx.arraytype():
+                return VarDecl(self.visit(ctx.arraytype()), typ, None, self.visit(ctx.expr()))
+        else:
+            if ctx.IDENTIFIER():
+                return VarDecl(Id(ctx.IDENTIFIER().getText()), typ, None, None)
+            if ctx.arraytype():
+                VarDecl(self.visit(ctx.arraytype()), typ, None, None)
 
 
     # implidecl: implivardecl | implidynadecl;
@@ -47,26 +57,27 @@ class ASTGeneration(ZCodeVisitor):
 
     # implivardecl: VAR IDENTIFIER ASSIGN expr;
     def visitImplivardecl(self, ctx:ZCodeParser.ImplivardeclContext):
-        return VarDecl(ctx.IDENTIFIER().getText(), None, "var", self.visit(ctx.expr()))
+        return VarDecl(Id(ctx.IDENTIFIER().getText()), None, "var", self.visit(ctx.expr()))
 
 
     # implidynadecl: DYNAMIC IDENTIFIER (ASSIGN expr | );
     def visitImplidynadecl(self, ctx:ZCodeParser.ImplidynadeclContext):
         if ctx.expr():
-            return VarDecl(ctx.IDENTIFIER().getText(), None, "dynamic", self.visit(ctx.expr()))
-        return VarDecl(ctx.IDENTIFIER().getText(), None, "dynamic", None)
+            return VarDecl(Id(ctx.IDENTIFIER().getText()), None, "dynamic", self.visit(ctx.expr()))
+        return VarDecl(Id(ctx.IDENTIFIER().getText()), None, "dynamic", None)
 
 
     # funcdecl: FUNC IDENTIFIER LRB parameterlist RRB nullablenewlinelist (returnstate | blockstate | nullablenewlinelist);
     def visitFuncdecl(self, ctx:ZCodeParser.FuncdeclContext):
+        parameterlist = self.visit(ctx.parameterlist())
         if ctx.returnstate():
-            return FuncDecl(ctx.IDENTIFIER().getText, self.visit(ctx.parameterlist()), self.visit(ctx.returnstate()))
-        return FuncDecl(ctx.IDENTIFIER().getText, self.visit(ctx.parameterlist()), self.visit(ctx.blockstate()))
+            return FuncDecl(Id(ctx.IDENTIFIER().getText()), parameterlist, self.visit(ctx.returnstate()))
+        return FuncDecl(Id(ctx.IDENTIFIER().getText()), parameterlist, self.visit(ctx.blockstate()))
 
 
     # parameterlist: parameterprime | ;
     def visitParameterlist(self, ctx:ZCodeParser.ParameterlistContext):
-        if ctx.getChildCount() == 0: return None
+        if ctx.getChildCount() == 0: return []
         return self.visit(ctx.parameterprime())
 
 
@@ -80,7 +91,7 @@ class ASTGeneration(ZCodeVisitor):
     # param: typ (IDENTIFIER | arraytype);
     def visitParam(self, ctx:ZCodeParser.ParamContext):
         if ctx.IDENTIFIER():
-            return (self.visit(ctx.typ()), ctx.IDENTIFIER().getText())
+            return (self.visit(ctx.typ()), Id(ctx.IDENTIFIER().getText()))
         return (self.visit(ctx.typ()), self.visit(ctx.arraytype()))
 
 
@@ -117,7 +128,7 @@ class ASTGeneration(ZCodeVisitor):
 
     # functioncall: IDENTIFIER LRB argumentlist RRB;
     def visitFunctioncall(self, ctx:ZCodeParser.FunctioncallContext):
-        return CallExpr(ctx.IDENTIFIER().getText(), self.visit(ctx.argumentlist()))
+        return CallExpr(Id(ctx.IDENTIFIER().getText()), self.visit(ctx.argumentlist()))
 
 
     # relational: EQUAL | CMPRSTR | DIFF | LT | GT | LE | GE;
@@ -136,6 +147,7 @@ class ASTGeneration(ZCodeVisitor):
             return ctx.LE().getText()
         return ctx.GE().getText()
 
+
     # logical: AND | OR;
     def visitLogical(self, ctx:ZCodeParser.LogicalContext):
         if ctx.AND():
@@ -149,6 +161,7 @@ class ASTGeneration(ZCodeVisitor):
             return ctx.PLUS().getText()
         return ctx.MINUS().getText()
 
+
     # multiplying: MULTIPLY | DIVIDE | MOD;
     def visitMultiplying(self, ctx:ZCodeParser.MultiplyingContext):
         if ctx.MULTIPLY():
@@ -157,18 +170,19 @@ class ASTGeneration(ZCodeVisitor):
             return ctx.DIVIDE().getText()
         return ctx.MOD().getText()
 
+
     # expr: expr1 CONCAT expr1 | expr1;
     def visitExpr(self, ctx:ZCodeParser.ExprContext):
         if ctx.getChildCount() == 1:
-            return self.visit(ctx.expr1())
-        return BinaryOp(ctx.CONCAT().getText(), self.visit(ctx.expr1()), self.visit(ctx.expr1()))
+            return self.visit(ctx.expr1()[0])
+        return BinaryOp(ctx.CONCAT().getText(), self.visit(ctx.expr1())[0], self.visit(ctx.expr1())[1])
 
 
     # expr1: expr2 relational expr2 | expr2;
     def visitExpr1(self, ctx:ZCodeParser.Expr1Context):
         if ctx.getChildCount() == 1:
-            return self.visit(ctx.expr2())
-        return BinaryOp(self.visit(ctx.relational()), self.visit(ctx.expr2()), self.visit(ctx.expr2()))
+            return self.visit(ctx.expr2()[0])
+        return BinaryOp(self.visit(ctx.relational()), self.visit(ctx.expr2())[0], self.visit(ctx.expr2())[1])
 
 
     # expr2: expr2 logical expr3 | expr3;
@@ -210,7 +224,7 @@ class ASTGeneration(ZCodeVisitor):
         if ctx.getChildCount() == 1:
             return self.visit(ctx.expr8())
         elif ctx.IDENTIFIER():
-            return ArrayCell(ctx.IDENTIFIER().getText(), self.visit(ctx.exprlist()))
+            return ArrayCell(Id(ctx.IDENTIFIER().getText()), self.visit(ctx.exprlist()))
         elif ctx.functioncall():
             return ArrayCell(self.visit(ctx.functioncall()), self.visit(ctx.exprlist()))
         
@@ -229,7 +243,7 @@ class ASTGeneration(ZCodeVisitor):
     # literal: NUMLIT | boollit | STRINGLIT | arraytype;
     def visitLiteral(self, ctx: ZCodeParser.LiteralContext):
         if ctx.NUMLIT():
-            return NumberLiteral(int(ctx.NUMLIT().getText()))
+            return NumberLiteral(float(ctx.NUMLIT().getText()))
         elif ctx.boollit():
             return self.visit(ctx.boollit())
         elif ctx.STRINGLIT():
@@ -270,7 +284,7 @@ class ASTGeneration(ZCodeVisitor):
 
     # lhs: IDENTIFIER | arraytype;
     def visitLhs(self, ctx:ZCodeParser.LhsContext):
-        return ctx.IDENTIFIER().getText() if ctx.IDENTIFIER else self.visit(ctx.arraytype())
+        return Id(ctx.IDENTIFIER().getText()) if ctx.IDENTIFIER else self.visit(ctx.arraytype())
 
 
     # ifstate: IF LRB expr RRB nullablenewlinelist stmt elifstatelist (elsestate | );
@@ -299,7 +313,7 @@ class ASTGeneration(ZCodeVisitor):
 
     # forstate: FOR IDENTIFIER UNTIL expr BY expr nullablenewlinelist stmt;
     def visitForstate(self, ctx:ZCodeParser.ForstateContext):
-        return For(ctx.IDENTIFIER().getText(), self.visit(ctx.expr()[0]), self.visit(ctx.expr()[1]), self.visit(ctx.stmt()))
+        return For(Id(ctx.IDENTIFIER().getText()), self.visit(ctx.expr()[0]), self.visit(ctx.expr()[1]), self.visit(ctx.stmt()))
 
 
     # breakstate: BREAK nullablenewlinelist;
@@ -319,7 +333,7 @@ class ASTGeneration(ZCodeVisitor):
 
     # functioncallstate: IDENTIFIER LRB argumentlist RRB newlinelist;
     def visitFunctioncallstate(self, ctx:ZCodeParser.FunctioncallstateContext):
-        return CallStmt(ctx.IDENTIFIER().getText(), self.visit(ctx.argumentlist()))
+        return CallStmt(Id(ctx.IDENTIFIER().getText()), self.visit(ctx.argumentlist()))
 
 
     # argumentlist: argumentprime | ;
