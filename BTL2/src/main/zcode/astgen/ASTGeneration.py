@@ -91,8 +91,8 @@ class ASTGeneration(ZCodeVisitor):
     # param: typ (IDENTIFIER | arraytype);
     def visitParam(self, ctx:ZCodeParser.ParamContext):
         if ctx.IDENTIFIER():
-            return (self.visit(ctx.typ()), Id(ctx.IDENTIFIER().getText()))
-        return (self.visit(ctx.typ()), self.visit(ctx.arraytype()))
+            return VarDecl(Id(ctx.IDENTIFIER().getText()), self.visit(ctx.typ()))
+        return VarDecl(self.visit(ctx.arraytype()), self.visit(ctx.typ()))
 
 
     # newlinelist: NEWLINE newlinelist | NEWLINE;
