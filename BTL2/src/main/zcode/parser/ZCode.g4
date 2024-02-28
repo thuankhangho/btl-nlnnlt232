@@ -73,7 +73,7 @@ expr7: (IDENTIFIER | functioncall) LSB exprlist RSB | expr8;
 
 expr8: IDENTIFIER | literal | LRB expr RRB | functioncall;
 
-literal: NUMLIT | boollit | STRINGLIT | arraytype;
+literal: NUMLIT | boollit | STRINGLIT | arraytype | arraylit;
 
 arraytype: IDENTIFIER LSB numlist RSB;
 

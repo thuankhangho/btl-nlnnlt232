@@ -42,12 +42,13 @@ class ASTGeneration(ZCodeVisitor):
             if ctx.IDENTIFIER():
                 return VarDecl(Id(ctx.IDENTIFIER().getText()), typ, None, self.visit(ctx.expr()))
             if ctx.arraytype():
-                return VarDecl(self.visit(ctx.arraytype()), typ, None, self.visit(ctx.expr()))
+                return VarDecl(self.visit(ctx.arraytype())[0], ArrayType(self.visit(ctx.arraytype())[1], typ), None, self.visit(ctx.expr()))
+                # print("Test 304", VarDecl(self.visit(ctx.arraytype())[0], ArrayType(self.visit(ctx.arraytype())[1], typ), None, None))
         else:
             if ctx.IDENTIFIER():
                 return VarDecl(Id(ctx.IDENTIFIER().getText()), typ, None, None)
             if ctx.arraytype():
-                VarDecl(self.visit(ctx.arraytype()), typ, None, None)
+                return VarDecl(self.visit(ctx.arraytype())[0], ArrayType(self.visit(ctx.arraytype())[1], typ), None, None)
 
 
     # implidecl: implivardecl | implidynadecl;
@@ -92,7 +93,7 @@ class ASTGeneration(ZCodeVisitor):
     def visitParam(self, ctx:ZCodeParser.ParamContext):
         if ctx.IDENTIFIER():
             return VarDecl(Id(ctx.IDENTIFIER().getText()), self.visit(ctx.typ()))
-        return VarDecl(self.visit(ctx.arraytype()), self.visit(ctx.typ()))
+        return VarDecl(ArrayCell(self.visit(ctx.arraytype())[0], self.visit(ctx.arraytype())[1]), self.visit(ctx.typ()))
 
 
     # newlinelist: NEWLINE newlinelist | NEWLINE;
@@ -116,7 +117,7 @@ class ASTGeneration(ZCodeVisitor):
 
     # arraylit: LSB elementlist RSB;
     def visitArraylit(self, ctx:ZCodeParser.ArraylitContext):
-        return ArrayLiteral(self.visit(ctx.elementlist))
+        return ArrayLiteral(self.visit(ctx.elementlist()))
 
 
     # elementlist: expr CM elementlist | expr;
@@ -175,14 +176,14 @@ class ASTGeneration(ZCodeVisitor):
     def visitExpr(self, ctx:ZCodeParser.ExprContext):
         if ctx.getChildCount() == 1:
             return self.visit(ctx.expr1()[0])
-        return BinaryOp(ctx.CONCAT().getText(), self.visit(ctx.expr1())[0], self.visit(ctx.expr1())[1])
+        return BinaryOp(ctx.CONCAT().getText(), self.visit(ctx.expr1()[0]), self.visit(ctx.expr1()[1]))
 
 
     # expr1: expr2 relational expr2 | expr2;
     def visitExpr1(self, ctx:ZCodeParser.Expr1Context):
         if ctx.getChildCount() == 1:
             return self.visit(ctx.expr2()[0])
-        return BinaryOp(self.visit(ctx.relational()), self.visit(ctx.expr2())[0], self.visit(ctx.expr2())[1])
+        return BinaryOp(self.visit(ctx.relational()), self.visit(ctx.expr2()[0]), self.visit(ctx.expr2()[1]))
 
 
     # expr2: expr2 logical expr3 | expr3;
@@ -240,27 +241,29 @@ class ASTGeneration(ZCodeVisitor):
         return self.visit(ctx.functioncall())
 
 
-    # literal: NUMLIT | boollit | STRINGLIT | arraytype;
+    # literal: NUMLIT | boollit | STRINGLIT | arraytype | arraylit;
     def visitLiteral(self, ctx: ZCodeParser.LiteralContext):
         if ctx.NUMLIT():
             return NumberLiteral(float(ctx.NUMLIT().getText()))
-        elif ctx.boollit():
+        if ctx.boollit():
             return self.visit(ctx.boollit())
-        elif ctx.STRINGLIT():
+        if ctx.STRINGLIT():
             return StringLiteral(ctx.STRINGLIT().getText())
-        return self.visit(ctx.arraytype())
+        if ctx.arraytype():
+            return self.visit(ctx.arraytype())
+        return self.visit(ctx.arraylit())
 
 
     # arraytype: IDENTIFIER LSB numlist RSB;
     def visitArraytype(self, ctx:ZCodeParser.ArraytypeContext):
-        return ArrayCell(Id(ctx.IDENTIFIER().getText(),), self.visit(ctx.numlist()))
+        return (Id(ctx.IDENTIFIER().getText()), self.visit(ctx.numlist()))
 
 
     # numlist: NUMLIT CM numlist | NUMLIT;
     def visitNumlist(self, ctx:ZCodeParser.NumlistContext):
         if ctx.getChildCount() == 1:
-            return [NumberLiteral(float(ctx.NUMLIT().getText()))]
-        return [NumberLiteral(float(ctx.NUMLIT().getText()))] + self.visit(ctx.numlist())
+            return [float(ctx.NUMLIT().getText())]
+        return [float(ctx.NUMLIT().getText())] + self.visit(ctx.numlist())
 
 
     # exprlist: expr CM exprlist | expr;
@@ -340,7 +343,7 @@ class ASTGeneration(ZCodeVisitor):
     def visitArgumentlist(self, ctx:ZCodeParser.ArgumentlistContext):
         if ctx.argumentprime():
             return self.visit(ctx.argumentprime())
-        return None
+        return []
 
 
     # argumentprime: expr CM argumentprime | expr;
@@ -356,7 +359,7 @@ class ASTGeneration(ZCodeVisitor):
     def visitBlockstate(self, ctx:ZCodeParser.BlockstateContext):
         if ctx.stmtlist():
             return Block(self.visit(ctx.stmtlist()))
-        return Block()
+        return []
 
 
     # stmtlist: stmt stmtlist | stmt;
