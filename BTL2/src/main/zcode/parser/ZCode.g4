@@ -86,7 +86,7 @@ vardeclstate: (typdecl | implidecl) newlinelist;
 
 assignstate: lhs ASSIGN expr newlinelist;
 
-lhs: IDENTIFIER | arraytype;
+lhs: IDENTIFIER | IDENTIFIER LSB exprlist RSB;
 
 ifstate: IF LRB expr RRB nullablenewlinelist stmt elifstatelist (elsestate | );
 
