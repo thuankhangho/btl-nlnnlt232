@@ -1,4 +1,5 @@
-
-            number VoTien[5,3,4.2] <- 1
-            bool VoTien[2,3,4]
+number a <- 15.35e-30
+        bool b <- false
+        string c <- "Hello World"
+        bool d[10]
         

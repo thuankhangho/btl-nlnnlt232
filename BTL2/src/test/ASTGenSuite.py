@@ -28,6 +28,68 @@ class ASTGenSuite(unittest.TestCase):
             VarDecl(Id("a"), NumberType(), None, NumberLiteral(2.0))
             ]))
         self.assertTrue(TestAST.test(input,expect,302))
+        
+    def test_303(self):
+        input = """dynamic a
+        """
+        expect = str(Program([
+            VarDecl(Id("a"), None, "dynamic", None)
+            ]))
+        self.assertTrue(TestAST.test(input,expect,303))
+        
+    def test_304(self):
+        input = """string a
+        """
+        expect = str(Program([
+            VarDecl(Id("a"), StringType())
+            ]))
+        self.assertTrue(TestAST.test(input,expect,304))
+    
+    def test_305(self):
+        input = """number a <- 15.35e-30
+        bool b <- false
+        string c <- "Hello World"
+        bool d[10]
+        """
+        expect = str(Program([
+            VarDecl(Id("a"), NumberType(), None, NumberLiteral(1.535e-29)),
+            VarDecl(Id("b"), BoolType(), None, BooleanLiteral(False)),
+            VarDecl(Id("c"), StringType(), None, StringLiteral("Hello World")),
+            VarDecl(Id("d"), ArrayType([10.0], BoolType())),
+            ]))
+        self.assertTrue(TestAST.test(input,expect,305))
+        
+    def test_306(self):
+        input = """dynamic a <- 15.35e-30
+        """
+        expect = str(Program([
+            VarDecl(Id("a"), None, "dynamic", NumberLiteral(1.535e-29))
+            ]))
+        self.assertTrue(TestAST.test(input,expect,306))
+        
+    def test_307(self):
+        input = """number a[5,3,4.2] <- 1
+        """
+        expect = str(Program([
+            VarDecl(Id("a"), ArrayType([5.0, 3.0, 4.2], NumberType()), None, NumberLiteral(1.0)),
+            ]))
+        self.assertTrue(TestAST.test(input,expect,307))
+        
+    def test_308(self):
+        input = """number a[5,3,4.2] <- [1,2,3]
+        """
+        expect = str(Program([
+            VarDecl(Id("a"), ArrayType([5.0, 3.0, 4.2], NumberType()), None, ArrayLiteral([NumberLiteral(1.0), NumberLiteral(2.0), NumberLiteral(3.0)])),
+            ]))
+        self.assertTrue(TestAST.test(input,expect,308))
+        
+    def test_309(self):
+        input = """number a[5,3,4.2] <- "Hello World"
+        """
+        expect = str(Program([
+            VarDecl(Id("a"), ArrayType([5.0, 3.0, 4.2], NumberType()), None, StringLiteral("Hello World")),
+            ]))
+        self.assertTrue(TestAST.test(input,expect,309))
     
     # def test_declared(self):
     #     input = """

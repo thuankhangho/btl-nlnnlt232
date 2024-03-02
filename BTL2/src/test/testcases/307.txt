@@ -1,3 +1,2 @@
-
-            var Votien <- 1
+number a[5,3,4.2] <- 1
         

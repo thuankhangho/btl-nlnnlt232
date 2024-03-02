@@ -1,4 +1,2 @@
-
-            dynamic Votien <- 1
-            dynamic Votien
+dynamic a <- 15.35e-30
         

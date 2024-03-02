@@ -1,1 +1,1 @@
-Program([FuncDecl(Id(main), [], Block([]))])
+Program([VarDecl(Id(a), ArrayType([5.0, 3.0, 4.2], NumberType), None, StringLit(Hello World))])
