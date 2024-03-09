@@ -1,0 +1,7 @@
+
+            func foo (string a, bool b)
+            func main()
+            begin
+                printInt(a / 4)
+            end
+        

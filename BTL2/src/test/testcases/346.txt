@@ -1,0 +1,6 @@
+
+            func main()
+            begin
+                return main(2) * foo(2) 
+            end
+        

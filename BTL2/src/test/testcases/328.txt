@@ -1,11 +1,6 @@
 
             func main()
-                begin
-                    if (true) return 1
-                end
-            func main()
-                begin
-                    if (true) return 2
-                    else return 3
-                end
+            begin
+                var x <- - [1.0, [1], -2]
+            end
         

@@ -1,9 +1,9 @@
 
             func main()
-                begin
-                    return  1 + 1
-                    return
-                end
-            func main()
-                return 1
+            begin
+                var x <- 1
+                var x <- "123"
+                var x <- true
+                var x <- false
+            end
         

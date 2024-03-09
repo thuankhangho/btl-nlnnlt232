@@ -1,1 +1,1 @@
-Program([VarDecl(Id(x), None, var, ArrayLit(NumLit(1.0), StringLit(a), BooleanLit(True), BooleanLit(False)))])
+Program([FuncDecl(Id(main), [VarDecl(Id(a), NumberType, None, None)], Return(NumLit(1.0)))])

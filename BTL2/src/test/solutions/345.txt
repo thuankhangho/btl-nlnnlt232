@@ -1,0 +1,1 @@
+Program([FuncDecl(Id(main), [], Block([For(Id(i), BinaryOp(>, Id(i), NumLit(15.0)), BinaryOp(+, NumLit(1.0), NumLit(1.0)), CallStmt(Id(print), [NumLit(1.0)]))])), FuncDecl(Id(foo), [], Block([For(Id(i), Id(i), ArrayLit(NumLit(1.0)), Block([If((BooleanLit(True), CallStmt(Id(print), [NumLit(1.0)])), [], None)]))]))])

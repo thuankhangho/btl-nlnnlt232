@@ -1,3 +1,6 @@
 
-            var x <- 2 or 3 and 1 <= 2 ... 4 <= 5 + a * 3 + c - -1 + not - 2
+            func main(number a[2,3], string b)
+            begin
+                return 1
+            end
         

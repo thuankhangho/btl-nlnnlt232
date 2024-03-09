@@ -1,0 +1,8 @@
+
+            number a <- 1
+            func main()
+            begin
+                for x until a > x by foo(x)
+                    x <- x + 1
+            end
+        

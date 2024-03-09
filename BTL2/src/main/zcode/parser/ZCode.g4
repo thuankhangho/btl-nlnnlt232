@@ -90,7 +90,7 @@ lhs: IDENTIFIER | IDENTIFIER LSB exprlist RSB;
 
 ifstate: IF LRB expr RRB nullablenewlinelist stmt elifstatelist (elsestate | );
 
-elsestate: ELSE stmt;
+elsestate: ELSE nullablenewlinelist stmt;
 
 elifstatelist: elifstate elifstatelist | ;
 

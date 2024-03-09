@@ -1,0 +1,9 @@
+
+            func main()
+            begin
+                var num1 <- readNumber()
+                var num2 <- readNumber()
+                if (areDivisors(num1, num2)) writeString("Yes")
+                else writeString("No")
+            end
+        
