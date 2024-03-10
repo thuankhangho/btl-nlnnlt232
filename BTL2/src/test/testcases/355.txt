@@ -1,0 +1,7 @@
+
+            func main()
+            begin
+                ## This is a single comment.
+                a <- 5
+            end
+        

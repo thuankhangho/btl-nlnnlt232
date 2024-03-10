@@ -1,0 +1,6 @@
+
+            func main(number a[2,3], string b)
+            begin
+                return 1
+            end
+        

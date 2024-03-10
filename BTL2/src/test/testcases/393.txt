@@ -1,0 +1,6 @@
+
+            func main()
+            begin
+                var x <- (2 + foo()) * 4
+            end
+        

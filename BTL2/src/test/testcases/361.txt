@@ -1,0 +1,3 @@
+number a[1]
+            number a <- 2
+        

@@ -1,0 +1,6 @@
+
+            func main()
+            begin
+                var x <- [1, "a", true, false]
+            end
+        

@@ -1,0 +1,8 @@
+
+            func main()
+            begin
+                ## This is a single comment.
+                aPI <- 3.14
+                l[3] <- value * aPi
+            end
+        

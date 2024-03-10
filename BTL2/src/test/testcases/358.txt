@@ -1,0 +1,9 @@
+
+            func main()
+            begin
+                ## This is a single comment.
+                var i <- 0
+                for i until i >= 10 by 1
+                    writeNumber(i)
+            end
+        
