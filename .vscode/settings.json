@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./BTL3/src/main/zcode/utils"
+    ]
+}
