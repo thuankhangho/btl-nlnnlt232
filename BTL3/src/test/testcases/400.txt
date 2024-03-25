@@ -1,2 +1,2 @@
-number a
+func main() return 1
         

@@ -20,27 +20,46 @@ class FuncEnv(MemberEnv):
         self.returnType = returnType
         self.hasBody = hasBody
 
-class VarEnv(MemberEnv):
-    pass
+class TypeVarEnv(MemberEnv):
+    name: Id
+    typ: Type
 
-class TypeVarDynamicEnv(MemberEnv):
-    pass
+    def __init__(self, name, typ):
+        self.name = name
+        self.typ = typ
 
-class LiteralEnv(MemberEnv):
-    pass
+class ImplicitVarEnv(MemberEnv):
+    name: Id
+    typ: Type
+    isDynamic: bool #var = false, dynamic = true
+
+    def __init__(self, name, typ, isDynamic):
+        self.name = name
+        self.typ = typ
+
+
 
 class StaticChecker(BaseVisitor, Utils):
     def __init__ (self, ast):
         self.ast = ast
         self.loop = 0 # có vào loop hay chưa (check break & continue)
-        self.param = [{
-                "readNumber": FuncEnv(Id("readNumber"), [], NumberType()),
-                "writeNumber": FuncEnv(Id("writeNumber"), [NumberType()], VoidType()),
-                "readBool": FuncEnv(Id("readBool"), [], BoolType()),
-                "writeBool": FuncEnv(Id("writeBool"), [BoolType()], VoidType()),
-                "readString": FuncEnv(Id("readString"), [], StringType()),
-                "writeString": FuncEnv(Id("writeString"), [StringType()], VoidType())
-            }]
+        self.param = [
+            [
+                FuncEnv(Id("readNumber"), [], NumberType()),
+                FuncEnv(Id("writeNumber"), [NumberType()], VoidType()),
+                FuncEnv(Id("readBool"), [], BoolType()),
+                FuncEnv(Id("writeBool"), [BoolType()], VoidType()),
+                FuncEnv(Id("readString"), [], StringType()),
+                FuncEnv(Id("writeString"), [StringType()], VoidType())
+            ]
+        ]
+        self.scope = 0 # 0 = toàn cục, > 0 = trong hàm/block stmt
+        
+    def compareType(self, LHS, RHS):
+        if type(LHS) is not type(RHS):
+            return False
+        return True
+        #todo: so sánh 2 biến type, kiểm tra array type sẽ kiểm tra size và eletype   
         
     def check(self):
         # print(self.ast)
@@ -49,34 +68,79 @@ class StaticChecker(BaseVisitor, Utils):
         
     def visitProgram(self, ast, param):
         # if not in ast.decl:
-        # for x in ast.decl():
+        # for x in ast.decl:
             
-        print(ast.decl[0])
-        reduce(lambda _, decl: self.visit(decl, param), ast.decl, [])
+        # print(ast.decl[0])
+        # reduce(lambda acc, cur: self.visit(cur, acc), ast.decl, param)
+        for x in ast.decl:
+            param[0] = param[0] + [x]
+        print(param)
+
+        for i in param:
+            for x in i:
+                if x.name.name == "main" and type(x) is FuncEnv:
+                    print(x)
+                    return
+        raise NoEntryPoint()
 
     def visitVarDecl(self, ast, param):
-        print(ast)
+        pass
 
     def visitFuncDecl(self, ast, param):
-        pass
+        name = self.visit(ast.name, param)
+        param = self.visit(ast.param, param)
+        body = self.visit(ast.body, param)
+
+        return FuncEnv(name, param)
 
     def visitNumberType(self, ast, param):
-        return ast
+        return NumberType()
 
     def visitBoolType(self, ast, param):
-        return ast
+        return BoolType()
 
     def visitStringType(self, ast, param):
-        return ast
+        return StringType()
 
     def visitArrayType(self, ast, param):
-        pass
+        return ArrayType()
 
     def visitBinaryOp(self, ast, param):
-        pass
+        left = self.visit(ast.left, param)
+        right = self.visit(ast.right, param)
+
+        if ast.op == "...":
+            if type(left) is not StringType or type(right) is not StringType:
+                raise TypeMismatchInExpression(ast)
+            return StringType()
+        if ast.op in ["=", "!=", "<", ">", "<=", ">="]:
+            if type(left) is not NumberType or type(right) is not NumberType:
+                raise TypeMismatchInExpression(ast)
+            return NumberType()
+        if ast.op in ["and", "or"]:
+            if type(left) is not BoolType or type(right) is not BoolType:
+                raise TypeMismatchInExpression(ast)
+            return BoolType()
+        if ast.op in ["+", "-"]:
+            if type(left) is not NumberType or type(right) is not NumberType:
+                raise TypeMismatchInExpression(ast)
+            return NumberType()
+
 
     def visitUnaryOp(self, ast, param):
-        pass
+        e = self.visit(ast.operand, param)
+        if ctx.op == "not":
+            if type(e) is not BoolType:
+                raise TypeMismatchInExpression(ast)
+            return BoolType()
+        if ctx.op == "-":
+            if type(e) is not NumberType:
+                raise TypeMismatchInExpression(ast)
+            return NumberType()
+        if ctx.op == '[]':
+            if type(e) is not NumberType:
+                raise TypeMismatchInExpression(ast)
+            return NumberType() # cần phải sửa
 
     def visitCallExpr(self, ast, param):
         pass

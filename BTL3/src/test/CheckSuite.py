@@ -5,7 +5,7 @@ from AST import *
 
 class CheckSuite(unittest.TestCase):
     def test_no_entry_point(self):
-        input = """number a
+        input = """func main() return 1
         """
         expect = "No Entry Point"
         self.assertTrue(TestChecker.test(input, expect, 400))
