@@ -20,24 +20,26 @@ class FuncEnv(MemberEnv):
         self.returnType = returnType
         self.hasBody = hasBody
 
-class TypeVarEnv(MemberEnv):
+class VarEnv(MemberEnv):
     name: Id
     typ: Type
+    isVar: int #dynamic = 0, var = 1, type = 2
 
-    def __init__(self, name, typ):
+    def __init__(self, name, typ, isVar = 2):
         self.name = name
         self.typ = typ
+        self.isVar = isVar
 
-class ImplicitVarEnv(MemberEnv):
-    name: Id
-    typ: Type
-    isDynamic: bool #var = false, dynamic = true
+class NoneType(Type):
+    pass
 
-    def __init__(self, name, typ, isDynamic):
-        self.name = name
-        self.typ = typ
-
-
+class Utils:
+    def infer(name, typ, o):
+        for sym in o:
+            for x in sym:
+                if x.name.name == name:
+                    x.typ = typ
+                    return x.typ
 
 class StaticChecker(BaseVisitor, Utils):
     def __init__ (self, ast):
@@ -67,28 +69,38 @@ class StaticChecker(BaseVisitor, Utils):
         return "successful"
         
     def visitProgram(self, ast, param):
-        # if not in ast.decl:
-        # for x in ast.decl:
-            
-        # print(ast.decl[0])
-        # reduce(lambda acc, cur: self.visit(cur, acc), ast.decl, param)
         for x in ast.decl:
-            param[0] = param[0] + [x]
-        print(param)
-
-        for i in param:
-            for x in i:
-                if x.name.name == "main" and type(x) is FuncEnv:
-                    print(x)
-                    return
-        raise NoEntryPoint()
+            # print(self.visit(x, param))
+            param[self.scope] = param[self.scope] + [self.visit(x, param)]
+        
+        # for x in param:
+        #     print(x)
+        # for i in param:
+        #     for x in i:
+        #         if x.name.name == "main" and type(x) is FuncEnv:
+        #             return
+        # raise NoEntryPoint()
 
     def visitVarDecl(self, ast, param):
-        pass
+        varInitType = self.visit(ast.varInit, param)
+
+        if ast.modifier == "dynamic":
+            varType = Utils.infer(ast.name.name, varInitType, param)
+            return VarEnv(ast.name, varType, 0)
+
+        if ast.modifier == "var":
+            varType = Utils.infer(ast.name.name, varInitType, param)
+            return VarEnv(ast.name, varType, 1)
+
+        if ast.modifier is None:
+            varType = self.visit(ast.varType, param)
+            return VarEnv(ast.name, varType, 2)
 
     def visitFuncDecl(self, ast, param):
         name = self.visit(ast.name, param)
-        param = self.visit(ast.param, param)
+        paramList = []
+        for x in ast.param:
+            paramList = paramList + [self.visit(x, param)]
         body = self.visit(ast.body, param)
 
         return FuncEnv(name, param)
@@ -106,39 +118,67 @@ class StaticChecker(BaseVisitor, Utils):
         return ArrayType()
 
     def visitBinaryOp(self, ast, param):
-        left = self.visit(ast.left, param)
-        right = self.visit(ast.right, param)
+        e1t = self.visit(ast.left, param)
+        e2t = self.visit(ast.right, param)
 
         if ast.op == "...":
-            if type(left) is not StringType or type(right) is not StringType:
+            if type(e1t) is NoneType:
+                e1t = Utils.infer(ast.left.name, StringType(), param)
+            if type(e2t) is NoneType:
+                e2t = Utils.infer(ast.right.name, StringType(), param)
+            if type(e1t) is not StringType or type(e2t) is not StringType:
                 raise TypeMismatchInExpression(ast)
             return StringType()
+        
         if ast.op in ["=", "!=", "<", ">", "<=", ">="]:
-            if type(left) is not NumberType or type(right) is not NumberType:
+            if type(e1t) is NoneType:
+                e1t = Utils.infer(ast.left.name, NumberType(), param)
+            if type(e2t) is NoneType:
+                e2t = Utils.infer(ast.right.name, NumberType(), param)
+            if type(e1t) is not NumberType or type(e2t) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
+        
         if ast.op in ["and", "or"]:
-            if type(left) is not BoolType or type(right) is not BoolType:
+            if type(e1t) is NoneType:
+                e1t = Utils.infer(ast.left.name, BoolType(), param)
+            if type(e2t) is NoneType:
+                e2t = Utils.infer(ast.right.name, BoolType(), param)
+            if type(e1t) is not BoolType or type(e2t) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
+        
         if ast.op in ["+", "-"]:
-            if type(left) is not NumberType or type(right) is not NumberType:
+            if type(e1t) is NoneType:
+                e1t = Utils.infer(ast.left.name, NumberType(), param)
+            if type(e2t) is NoneType:
+                e2t = Utils.infer(ast.right.name, NumberType(), param)
+            if type(e1t) is not NumberType or type(e2t) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
 
 
     def visitUnaryOp(self, ast, param):
-        e = self.visit(ast.operand, param)
-        if ctx.op == "not":
-            if type(e) is not BoolType:
+        et = self.visit(ast.operand, param)
+
+        if ast.op == "not":
+            if type(et) is NoneType:
+                et = Utils.infer(ast.operand.name, BoolType(), param)
+            if type(et) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
-        if ctx.op == "-":
-            if type(e) is not NumberType:
+        
+        if ast.op == "-":
+            if type(et) is NoneType:
+                et = Utils.infer(ast.operand.name, NumberType(), param)        
+            if type(et) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
-        if ctx.op == '[]':
-            if type(e) is not NumberType:
+        
+        if ast.op == '[]':
+            if type(et) is NoneType:
+                et = Utils.infer(ast.operand.name, NumberType(), param)
+            if type(et) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType() # cần phải sửa
 
@@ -146,7 +186,10 @@ class StaticChecker(BaseVisitor, Utils):
         pass
 
     def visitId(self, ast, param):
-        pass
+        for x in param:
+            if x.name == ast.name:
+                return x.typ
+        raise Undeclared(Identifier(), ast.name)
 
     def visitArrayCell(self, ast, param):
         pass
@@ -180,13 +223,13 @@ class StaticChecker(BaseVisitor, Utils):
         pass
 
     def visitNumberLiteral(self, ast, param):
-        return NumberLiteral()
+        return NumberType()
 
     def visitBooleanLiteral(self, ast, param):
-        return BooleanLiteral()
+        return BoolType()
 
     def visitStringLiteral(self, ast, param):
-        return StringLiteral()
+        return StringType()
 
     def visitArrayLiteral(self, ast, param):
         pass
