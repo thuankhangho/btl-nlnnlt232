@@ -30,7 +30,7 @@ class VarEnv(MemberEnv):
         self.typ = typ
         self.isVar = isVar
 
-class NoneType(Type):
+class VoidType(Type):
     pass
 
 class Utils:
@@ -122,36 +122,36 @@ class StaticChecker(BaseVisitor, Utils):
         e2t = self.visit(ast.right, param)
 
         if ast.op == "...":
-            if type(e1t) is NoneType:
+            if type(e1t) is VoidType:
                 e1t = Utils.infer(ast.left.name, StringType(), param)
-            if type(e2t) is NoneType:
+            if type(e2t) is VoidType:
                 e2t = Utils.infer(ast.right.name, StringType(), param)
             if type(e1t) is not StringType or type(e2t) is not StringType:
                 raise TypeMismatchInExpression(ast)
             return StringType()
         
         if ast.op in ["=", "!=", "<", ">", "<=", ">="]:
-            if type(e1t) is NoneType:
+            if type(e1t) is VoidType:
                 e1t = Utils.infer(ast.left.name, NumberType(), param)
-            if type(e2t) is NoneType:
+            if type(e2t) is VoidType:
                 e2t = Utils.infer(ast.right.name, NumberType(), param)
             if type(e1t) is not NumberType or type(e2t) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
         
         if ast.op in ["and", "or"]:
-            if type(e1t) is NoneType:
+            if type(e1t) is VoidType:
                 e1t = Utils.infer(ast.left.name, BoolType(), param)
-            if type(e2t) is NoneType:
+            if type(e2t) is VoidType:
                 e2t = Utils.infer(ast.right.name, BoolType(), param)
             if type(e1t) is not BoolType or type(e2t) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
         
         if ast.op in ["+", "-"]:
-            if type(e1t) is NoneType:
+            if type(e1t) is VoidType:
                 e1t = Utils.infer(ast.left.name, NumberType(), param)
-            if type(e2t) is NoneType:
+            if type(e2t) is VoidType:
                 e2t = Utils.infer(ast.right.name, NumberType(), param)
             if type(e1t) is not NumberType or type(e2t) is not NumberType:
                 raise TypeMismatchInExpression(ast)
@@ -162,21 +162,21 @@ class StaticChecker(BaseVisitor, Utils):
         et = self.visit(ast.operand, param)
 
         if ast.op == "not":
-            if type(et) is NoneType:
+            if type(et) is VoidType:
                 et = Utils.infer(ast.operand.name, BoolType(), param)
             if type(et) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
         
         if ast.op == "-":
-            if type(et) is NoneType:
+            if type(et) is VoidType:
                 et = Utils.infer(ast.operand.name, NumberType(), param)        
             if type(et) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
         
         if ast.op == '[]':
-            if type(et) is NoneType:
+            if type(et) is VoidType:
                 et = Utils.infer(ast.operand.name, NumberType(), param)
             if type(et) is not NumberType:
                 raise TypeMismatchInExpression(ast)
