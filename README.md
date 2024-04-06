@@ -1,6 +1,6 @@
 # Bài tập lớn môn Nguyên lý ngôn ngữ lập trình (CO3005) HK232
 
-Đây là repository cho 3 BTL môn Nguyên lý ngôn ngữ lập trình (CO3005), GV: thầy Trần Ngọc Bảo Duy
+Đây là repository cho 4 BTL môn Nguyên lý ngôn ngữ lập trình (CO3005), GV: thầy Trần Ngọc Bảo Duy
 
 - Bài tập lớn 1: Lexer & Parser
 
