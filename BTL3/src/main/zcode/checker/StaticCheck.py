@@ -61,12 +61,24 @@ class StaticChecker(BaseVisitor, Utils):
         #todo: so sánh 2 biến type, kiểm tra array type sẽ kiểm tra size và eletype
 
     def findFuncNameInParam(self, name: str) -> bool:
-        print(self.param)
         for scope in self.param:
             for x in scope:
                 if name == x.name:
                     return True
         return False
+    
+    def getFuncEnvFromName(self, name: str) -> FuncEnv:
+        for scope in self.param:
+            for x in scope:
+                if name == x.name:
+                    return x
+        return None
+    
+    def setFuncEnv(self, newFuncEnv: FuncEnv):
+        for scope in self.param:
+            for x in scope:
+                if newFuncEnv.name == x.name:
+                    x = newFuncEnv                    
 
     def addToParam(self, ast: Program):
         for x in ast.decl:
@@ -74,7 +86,12 @@ class StaticChecker(BaseVisitor, Utils):
 
     def appendFunc(self, newFunc: FuncDecl):
         if self.findFuncNameInParam(newFunc.name):
-            raise Redeclared(Function(), newFunc.name.name)
+            existingFunc = self.getFuncEnvFromName(newFunc.name)
+            if existingFunc.hasBody == True:
+                raise Redeclared(Function(), newFunc.name.name)
+            else:
+                existingFunc.hasBody = True
+                self.setFuncEnv(existingFunc)
         
         paramType = newFunc.param
         if newFunc.body is None:

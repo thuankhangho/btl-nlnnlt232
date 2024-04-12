@@ -1,2 +1,4 @@
-func test() return 0
+
+        func main()
+        func main() return 1
         
