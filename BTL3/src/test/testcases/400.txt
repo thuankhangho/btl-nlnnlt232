@@ -1,2 +1,2 @@
-number a <- "a" ... "b"
+func test() return 0
         
