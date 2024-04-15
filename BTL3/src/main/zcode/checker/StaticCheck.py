@@ -60,7 +60,7 @@ class StaticChecker(BaseVisitor, Utils):
         return True
         #todo: so sánh 2 biến type, kiểm tra array type sẽ kiểm tra size và eletype
 
-    def findFuncNameInParam(self, name: str) -> bool:
+    def findNameInParam(self, name: str) -> bool:
         for scope in self.param:
             for x in scope:
                 if name == x.name:
@@ -82,10 +82,12 @@ class StaticChecker(BaseVisitor, Utils):
 
     def addToParam(self, ast: Program):
         for x in ast.decl:
-            self.appendFunc(x)
+            if type(x) is FuncDecl:
+                self.appendFunc(x)
+            else: self.appendVar(x)
 
     def appendFunc(self, newFunc: FuncDecl):
-        if self.findFuncNameInParam(newFunc.name):
+        if self.findNameInParam(newFunc.name):
             existingFunc = self.getFuncEnvFromName(newFunc.name)
             if existingFunc.hasBody == True:
                 raise Redeclared(Function(), newFunc.name.name)
@@ -98,6 +100,11 @@ class StaticChecker(BaseVisitor, Utils):
             self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType, False))
         else:
             self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType, True))
+
+    def appendVar(self, newVar: VarDecl):
+        if self.findNameInParam(newVar.name):
+            raise Redeclared(Variable(), newVar.name.name)
+        self.param[0].append(VarEnv(newVar.name, newVar.varType, newVar.modifier))
         
     def checkNoEntryPoint(self, ast: Program):
         for x in self.param[0]: # đi tìm main ở toàn cục
@@ -110,27 +117,34 @@ class StaticChecker(BaseVisitor, Utils):
 
         # thêm mọi hàm vào param
         self.addToParam(self.ast)
-        # print(self.param)
 
         # kiểm tra no entry point
         self.checkNoEntryPoint(self.ast)
+        # for x in self.param:
+        #     for y in x:
+        #         print(x.index, y.name)
+        # print(self.param)
 
         # visit phần còn lại
-        # self.visit(self.ast, self.param)
+        self.visit(self.ast, self.param)
         return "successful"
         
     def visitProgram(self, ast, param):
-        for x in ast.decl:
-            # print(self.visit(x, param))
-            param[self.scope] = param[self.scope] + [self.visit(x, param)]
-        
-        # for x in param:
-        #     print(x)
-        # for i in param:
-        #     for x in i:
-        #         if x.name.name == "main" and type(x) is FuncEnv:
-        #             return
-        # raise NoEntryPoint()
+        # for x in ast.decl:
+        #     # print(self.visit(x, param))
+        #     param[self.scope] = param[self.scope] + [self.visit(x, param)]
+        self.param = [
+            [
+                FuncEnv(Id("readNumber"), [], NumberType(), True),
+                FuncEnv(Id("writeNumber"), [NumberType()], VoidType(), True),
+                FuncEnv(Id("readBool"), [], BoolType(), True),
+                FuncEnv(Id("writeBool"), [BoolType()], VoidType(), True),
+                FuncEnv(Id("readString"), [], StringType(), True),
+                FuncEnv(Id("writeString"), [StringType()], VoidType(), True)
+            ]
+        ]
+
+        reduce(lambda _, decl: self.visit(decl, param), ast.decl, self.param)
 
     def visitVarDecl(self, ast, param):
         varInitType = self.visit(ast.varInit, param)
