@@ -30,7 +30,7 @@ class VarEnv(MemberEnv):
         self.typ = typ
         self.isVar = isVar
 
-class Utils:
+class UtilsEnv:
     def infer(name, typ, o):
         for sym in o:
             for x in sym:
@@ -119,7 +119,8 @@ class StaticChecker(BaseVisitor, Utils):
         self.addToParam(self.ast)
 
         # kiểm tra no entry point
-        self.checkNoEntryPoint(self.ast)
+        # self.checkNoEntryPoint(self.ast)
+
         # for x in self.param:
         #     for y in x:
         #         print(x.index, y.name)
@@ -133,7 +134,7 @@ class StaticChecker(BaseVisitor, Utils):
         # for x in ast.decl:
         #     # print(self.visit(x, param))
         #     param[self.scope] = param[self.scope] + [self.visit(x, param)]
-        self.param = [
+        param = [
             [
                 FuncEnv(Id("readNumber"), [], NumberType(), True),
                 FuncEnv(Id("writeNumber"), [NumberType()], VoidType(), True),
@@ -144,17 +145,20 @@ class StaticChecker(BaseVisitor, Utils):
             ]
         ]
 
-        reduce(lambda _, decl: self.visit(decl, param), ast.decl, self.param)
+        reduce(lambda _, decl: self.visit(decl, param), ast.decl, param)
+        print(param)
 
     def visitVarDecl(self, ast, param):
         varInitType = self.visit(ast.varInit, param)
 
+        print(ast.modifier)
+
         if ast.modifier == "dynamic":
-            varType = Utils.infer(ast.name.name, varInitType, param)
+            varType = UtilsEnv.infer(ast.name.name, varInitType, param)
             return VarEnv(ast.name, varType, 0)
 
         if ast.modifier == "var":
-            varType = Utils.infer(ast.name.name, varInitType, param)
+            varType = UtilsEnv.infer(ast.name.name, varInitType, param)
             return VarEnv(ast.name, varType, 1)
 
         if ast.modifier is None:
@@ -188,36 +192,36 @@ class StaticChecker(BaseVisitor, Utils):
 
         if ast.op == "...":
             if type(e1t) is VoidType:
-                e1t = Utils.infer(ast.left.name, StringType(), param)
+                e1t = UtilsEnv.infer(ast.left.name, StringType(), param)
             if type(e2t) is VoidType:
-                e2t = Utils.infer(ast.right.name, StringType(), param)
+                e2t = UtilsEnv.infer(ast.right.name, StringType(), param)
             if type(e1t) is not StringType or type(e2t) is not StringType:
                 raise TypeMismatchInExpression(ast)
             return StringType()
         
         if ast.op in ["=", "!=", "<", ">", "<=", ">="]:
             if type(e1t) is VoidType:
-                e1t = Utils.infer(ast.left.name, NumberType(), param)
+                e1t = UtilsEnv.infer(ast.left.name, NumberType(), param)
             if type(e2t) is VoidType:
-                e2t = Utils.infer(ast.right.name, NumberType(), param)
+                e2t = UtilsEnv.infer(ast.right.name, NumberType(), param)
             if type(e1t) is not NumberType or type(e2t) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
         
         if ast.op in ["and", "or"]:
             if type(e1t) is VoidType:
-                e1t = Utils.infer(ast.left.name, BoolType(), param)
+                e1t = UtilsEnv.infer(ast.left.name, BoolType(), param)
             if type(e2t) is VoidType:
-                e2t = Utils.infer(ast.right.name, BoolType(), param)
+                e2t = UtilsEnv.infer(ast.right.name, BoolType(), param)
             if type(e1t) is not BoolType or type(e2t) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
         
         if ast.op in ["+", "-"]:
             if type(e1t) is VoidType:
-                e1t = Utils.infer(ast.left.name, NumberType(), param)
+                e1t = UtilsEnv.infer(ast.left.name, NumberType(), param)
             if type(e2t) is VoidType:
-                e2t = Utils.infer(ast.right.name, NumberType(), param)
+                e2t = UtilsEnv.infer(ast.right.name, NumberType(), param)
             if type(e1t) is not NumberType or type(e2t) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
@@ -227,21 +231,21 @@ class StaticChecker(BaseVisitor, Utils):
 
         if ast.op == "not":
             if type(et) is VoidType:
-                et = Utils.infer(ast.operand.name, BoolType(), param)
+                et = UtilsEnv.infer(ast.operand.name, BoolType(), param)
             if type(et) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
         
         if ast.op == "-":
             if type(et) is VoidType:
-                et = Utils.infer(ast.operand.name, NumberType(), param)        
+                et = UtilsEnv.infer(ast.operand.name, NumberType(), param)        
             if type(et) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
         
         if ast.op == '[]':
             if type(et) is VoidType:
-                et = Utils.infer(ast.operand.name, NumberType(), param)
+                et = UtilsEnv.infer(ast.operand.name, NumberType(), param)
             if type(et) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType() # cần phải sửa
@@ -250,9 +254,11 @@ class StaticChecker(BaseVisitor, Utils):
         pass
 
     def visitId(self, ast, param):
-        for env in param:
-            for y in env:
+        for scope in param:
+            for y in scope:
                 if y.name.name == ast.name:
+                    if type(y) is FuncEnv:
+                        return y.returnType
                     return y.typ
         raise Undeclared(Identifier(), ast.name)
 
