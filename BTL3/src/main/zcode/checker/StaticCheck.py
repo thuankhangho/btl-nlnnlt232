@@ -36,19 +36,11 @@ class VarEnv(MemberEnv):
         self.typ = typ
         self.isVar = isVar
 
-class UtilsEnv:
-    def infer(name, typ, o):
-        for sym in o:
-            for x in sym:
-                if x.name.name == name:
-                    x.typ = typ
-                    return x.typ
-
 class StaticChecker(BaseVisitor, Utils):
     def __init__ (self, ast):
         self.ast = ast
         self.loop = 0 # có vào loop hay chưa (check break & continue)
-        self.param = [
+        self.param: List[MemberEnv] = [
             [
                 FuncEnv(Id("readNumber"), [], NumberType(), True),
                 FuncEnv(Id("writeNumber"), [NumberType()], VoidType(), True),
@@ -77,7 +69,7 @@ class StaticChecker(BaseVisitor, Utils):
     def getFuncEnvFromId(self, name: Id) -> FuncEnv:
         for scope in self.param:
             for x in scope:
-                if name == x.name:
+                if x.name == name:
                     return x
         return None
     
@@ -95,19 +87,25 @@ class StaticChecker(BaseVisitor, Utils):
                 self.appendVar(x)
 
     def appendFunc(self, newFunc: FuncDecl):
-        if self.findNameInParam(newFunc.name):
+        if self.findNameInParam(newFunc.name): # có trong param -> tìm & cập nhật hasBody & body
             existingFunc = self.getFuncEnvFromId(newFunc.name)
             if existingFunc.hasBody == True:
                 raise Redeclared(Function(), newFunc.name.name)
             else:
                 existingFunc.hasBody = True
-                self.setFuncEnv(existingFunc)
-        
-        paramType = newFunc.param
-        if newFunc.body is None:
-            self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType(), False))
-        else:
-            self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType(), True, newFunc.body))
+                existingFunc.body = newFunc.body
+                self.setFuncEnv(existingFunc) # tìm FuncEnv có sẵn & sửa thuộc tính hasBody
+
+        else: # không có trong param -> thêm mới vào
+            paramType = newFunc.param # sửa lại thành self.visit(newFunc.param, self.param)
+            if newFunc.body is None:
+                self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType(), False))
+            else:
+                self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType(), True, newFunc.body))
+
+        # for x in self.param[0]:
+        #     print(x.name, x.body)
+        # print("=================================")
 
     def appendVar(self, newVar: VarDecl):
         if self.findNameInParam(newVar.name):
@@ -116,7 +114,7 @@ class StaticChecker(BaseVisitor, Utils):
         
     def checkNoEntryPoint(self, ast: Program):
         for x in self.param[0]: # đi tìm main ở toàn cục
-            if x.name.name == "main" and x.hasBody == True:
+            if x.name.name == "main":
                 return
         raise NoEntryPoint()
     
@@ -124,11 +122,24 @@ class StaticChecker(BaseVisitor, Utils):
         for env in self.param:
             for x in env:
                 if x.hasBody == False:
-                    raise NoDefinition(x.name)
+                    raise NoDefinition(x.name.name)
+                
+    def infer(self, name, typ, o):
+        for sym in o:
+            for x in sym:
+                if x.name == name:
+                    x.typ = typ
+                    return x.typ
+        return VoidType()
+    
+    def getVarEnvFromId(self, name: Id) -> VarEnv:
+        for scope in self.param:
+            for x in scope:
+                if x.name == name:
+                    return x
+        return None
 
     def check(self):
-        # print(self.ast)
-
         # thêm mọi hàm vào param
         self.addToParam(self.ast)
 
@@ -138,11 +149,6 @@ class StaticChecker(BaseVisitor, Utils):
         # kiểm tra no entry point
         self.checkNoDefinition(self.ast)
 
-        # for x in self.param:
-        #     for y in x:
-        #         print(x.index, y.name)
-        # print(self.param)
-
         # visit phần còn lại
         self.visit(self.ast, self.param)
         return "successful"
@@ -150,49 +156,47 @@ class StaticChecker(BaseVisitor, Utils):
     def visitProgram(self, ast, param):
         for x in ast.decl:
             self.visit(x, param)
-            # param[self.scope] = param[self.scope] + [self.visit(x, param)]
-        # reduce(lambda _, decl: self.visit(decl, param), ast.decl, param)
-        # print(param)
 
     def visitVarDecl(self, ast, param):
         if ast.varInit:
             varInitType = self.visit(ast.varInit, param)
         else:
-            varInitType = None
+            varInitType = VoidType()
 
         if ast.modifier == "dynamic":
-            varType = UtilsEnv.infer(ast.name.name, varInitType, param)
-            return VarEnv(ast.name, varType, 0)
+            varType = self.getVarEnvFromId(ast.name)
+            if varType is None:
+                varType = varInitType
+            else:
+                varType = self.getVarEnvFromId(ast.name).typ
+            param[self.scope].append(VarEnv(ast.name, varType, 0))
 
-        if ast.modifier == "var":
-            varType = UtilsEnv.infer(ast.name.name, varInitType, param)
-            return VarEnv(ast.name, varType, 1)
+        elif ast.modifier == "var":
+            varType = varInitType
+            param[self.scope].append(VarEnv(ast.name, varType, 1))
 
-        if ast.modifier is None:
+        elif ast.modifier is None:
             varType = self.visit(ast.varType, param)
-            return VarEnv(ast.name, varType, 2)
+            param[self.scope].append(VarEnv(ast.name, varType, 2))
 
     def visitFuncDecl(self, ast: FuncDecl, param):
         param = param + [[]] # thêm 1 scope vào param
-        self.scope += 1
         newFuncEnv = self.getFuncEnvFromId(ast.name)
 
         # visit danh sách tham số đầu vào
-        paramList = []
+        self.scope += 1
         for x in ast.param:
-            paramList = paramList + [self.visit(x, param)]
+            self.visit(x, param)
 
         # visit body
         body = self.visit(newFuncEnv.body, param)
         param[self.scope].append(body)
-        # print(param)
-
-        # get return type
-        self.getFuncEnvFromId(ast.name).returnType = self.returnType
-        # print(self.getFuncEnvFromId(ast.name))
-        
-        param.pop(self.scope)
         self.scope -= 1
+
+        # lấy return type
+        self.getFuncEnvFromId(ast.name).returnType = self.returnType
+        
+        param.pop(self.scope) # pop stack param
         
     def visitNumberType(self, ast, param):
         return NumberType()
@@ -212,36 +216,36 @@ class StaticChecker(BaseVisitor, Utils):
 
         if ast.op == "...":
             if type(e1t) is VoidType:
-                e1t = UtilsEnv.infer(ast.left.name, StringType(), param)
+                e1t = self.infer(ast.left.name, StringType(), param)
             if type(e2t) is VoidType:
-                e2t = UtilsEnv.infer(ast.right.name, StringType(), param)
+                e2t = self.infer(ast.right.name, StringType(), param)
             if type(e1t) is not StringType or type(e2t) is not StringType:
                 raise TypeMismatchInExpression(ast)
             return StringType()
         
         if ast.op in ["=", "!=", "<", ">", "<=", ">="]:
             if type(e1t) is VoidType:
-                e1t = UtilsEnv.infer(ast.left.name, NumberType(), param)
+                e1t = self.infer(ast.left.name, NumberType(), param)
             if type(e2t) is VoidType:
-                e2t = UtilsEnv.infer(ast.right.name, NumberType(), param)
+                e2t = self.infer(ast.right.name, NumberType(), param)
             if type(e1t) is not NumberType or type(e2t) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
         
         if ast.op in ["and", "or"]:
             if type(e1t) is VoidType:
-                e1t = UtilsEnv.infer(ast.left.name, BoolType(), param)
+                e1t = self.infer(ast.left.name, BoolType(), param)
             if type(e2t) is VoidType:
-                e2t = UtilsEnv.infer(ast.right.name, BoolType(), param)
+                e2t = self.infer(ast.right.name, BoolType(), param)
             if type(e1t) is not BoolType or type(e2t) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
         
         if ast.op in ["+", "-"]:
             if type(e1t) is VoidType:
-                e1t = UtilsEnv.infer(ast.left.name, NumberType(), param)
+                e1t = self.infer(ast.left.name, NumberType(), param)
             if type(e2t) is VoidType:
-                e2t = UtilsEnv.infer(ast.right.name, NumberType(), param)
+                e2t = self.infer(ast.right.name, NumberType(), param)
             if type(e1t) is not NumberType or type(e2t) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
@@ -251,21 +255,21 @@ class StaticChecker(BaseVisitor, Utils):
 
         if ast.op == "not":
             if type(et) is VoidType:
-                et = UtilsEnv.infer(ast.operand.name, BoolType(), param)
+                et = self.infer(ast.operand.name, BoolType(), param)
             if type(et) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
         
         if ast.op == "-":
             if type(et) is VoidType:
-                et = UtilsEnv.infer(ast.operand.name, NumberType(), param)        
+                et = self.infer(ast.operand.name, NumberType(), param)        
             if type(et) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
         
         if ast.op == '[]':
             if type(et) is VoidType:
-                et = UtilsEnv.infer(ast.operand.name, NumberType(), param)
+                et = self.infer(ast.operand.name, NumberType(), param)
             if type(et) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType() # cần phải sửa
@@ -284,15 +288,16 @@ class StaticChecker(BaseVisitor, Utils):
         pass
 
     def visitBlock(self, ast, param):
-        pass
+        for x in ast.stmt:
+            self.visit(x, param)
 
     def visitIf(self, ast, param):
         pass
 
     def visitFor(self, ast, param):
-        self.loop = self.loop + 1
+        self.loop += 1
         self.visit(ast.body, [{}] + param)
-        self.loop = self.loop - 1
+        self.loop -= 1
 
     def visitContinue(self, ast, param):
         if self.loop == 0:
@@ -323,7 +328,11 @@ class StaticChecker(BaseVisitor, Utils):
         return StringType()
 
     def visitArrayLiteral(self, ast, param):
-        arraylit = []
+        arrayLit = []
         for x in ast.value:
-            arraylit.append(self.visit(x, param))
-        return arraylit
+            arrayLit.append(self.visit(x, param))
+        arrayLitType = arrayLit[0]
+        for x in arrayLit:
+            if x is not arrayLitType:
+                raise TypeMismatchInExpression(ast)
+        return arrayLit

@@ -1,4 +1,8 @@
 
-        func main()
+        func x()
+        begin
+            number a
+            dynamic b <- [1, "a", 3]
+        end
         func main() return "a"
         

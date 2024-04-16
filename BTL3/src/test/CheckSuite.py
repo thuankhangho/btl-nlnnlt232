@@ -6,8 +6,12 @@ from AST import *
 class CheckSuite(unittest.TestCase):
     def test_no_entry_point(self):
         input = """
-        func main()
+        func x()
+        begin
+            number a
+            dynamic b <- [1, "a", [1, 2]]
+        end
         func main() return "a"
         """
-        expect = "No Entry Point"
+        expect = "Type Mismatch In Expression: BinaryOp(+, Id(a), Id(b))"
         self.assertTrue(TestChecker.test(input, expect, 400))
