@@ -1,3 +1,4 @@
 
-        number a <- 1
+        func main()
+        func main() return "a"
         

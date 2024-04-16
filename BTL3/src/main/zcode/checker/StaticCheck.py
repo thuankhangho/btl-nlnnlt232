@@ -20,6 +20,10 @@ class FuncEnv(MemberEnv):
         self.returnType = returnType
         self.hasBody = hasBody
 
+    def __str__(self):
+        return f"FuncEnv(name = {str(self.name)}, paramList = [{', '.join(str(i) for i in self.paramList)}], returnType = {str(self.returnType)}, hasBody = {str(self.hasBody)})"
+
+
 class VarEnv(MemberEnv):
     name: Id
     typ: Type
@@ -53,6 +57,7 @@ class StaticChecker(BaseVisitor, Utils):
             ]
         ]
         self.scope = 0 # 0 = toàn cục, > 0 = trong hàm/block stmt
+        self.returnType: Type = VoidType() # return type của hàm
         
     def compareType(self, LHS, RHS):
         if type(LHS) is not type(RHS):
@@ -84,7 +89,8 @@ class StaticChecker(BaseVisitor, Utils):
         for x in ast.decl:
             if type(x) is FuncDecl:
                 self.appendFunc(x)
-            else: self.appendVar(x)
+            else:
+                self.appendVar(x)
 
     def appendFunc(self, newFunc: FuncDecl):
         if self.findNameInParam(newFunc.name):
@@ -97,9 +103,9 @@ class StaticChecker(BaseVisitor, Utils):
         
         paramType = newFunc.param
         if newFunc.body is None:
-            self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType, False))
+            self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType(), False))
         else:
-            self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType, True))
+            self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType(), True))
 
     def appendVar(self, newVar: VarDecl):
         if self.findNameInParam(newVar.name):
@@ -110,6 +116,8 @@ class StaticChecker(BaseVisitor, Utils):
         for x in self.param[0]: # đi tìm main ở toàn cục
             if x.name.name == "main" and x.hasBody == True:
                 return
+            if x.name.name == "main" and x.hasBody == False:
+                raise NoDefinition(x.name.name)
         raise NoEntryPoint()
 
     def check(self):
@@ -119,7 +127,7 @@ class StaticChecker(BaseVisitor, Utils):
         self.addToParam(self.ast)
 
         # kiểm tra no entry point
-        # self.checkNoEntryPoint(self.ast)
+        self.checkNoEntryPoint(self.ast)
 
         # for x in self.param:
         #     for y in x:
@@ -131,27 +139,17 @@ class StaticChecker(BaseVisitor, Utils):
         return "successful"
         
     def visitProgram(self, ast, param):
-        # for x in ast.decl:
-        #     # print(self.visit(x, param))
-        #     param[self.scope] = param[self.scope] + [self.visit(x, param)]
-        param = [
-            [
-                FuncEnv(Id("readNumber"), [], NumberType(), True),
-                FuncEnv(Id("writeNumber"), [NumberType()], VoidType(), True),
-                FuncEnv(Id("readBool"), [], BoolType(), True),
-                FuncEnv(Id("writeBool"), [BoolType()], VoidType(), True),
-                FuncEnv(Id("readString"), [], StringType(), True),
-                FuncEnv(Id("writeString"), [StringType()], VoidType(), True)
-            ]
-        ]
-
-        reduce(lambda _, decl: self.visit(decl, param), ast.decl, param)
-        print(param)
+        for x in ast.decl:
+            self.visit(x, param)
+            # param[self.scope] = param[self.scope] + [self.visit(x, param)]
+        # reduce(lambda _, decl: self.visit(decl, param), ast.decl, param)
+        # print(param)
 
     def visitVarDecl(self, ast, param):
-        varInitType = self.visit(ast.varInit, param)
-
-        print(ast.modifier)
+        if ast.varInit:
+            varInitType = self.visit(ast.varInit, param)
+        else:
+            varInitType = None
 
         if ast.modifier == "dynamic":
             varType = UtilsEnv.infer(ast.name.name, varInitType, param)
@@ -166,14 +164,26 @@ class StaticChecker(BaseVisitor, Utils):
             return VarEnv(ast.name, varType, 2)
 
     def visitFuncDecl(self, ast, param):
-        name = self.visit(ast.name, param)
+        param = param + [[]] # thêm 1 scope vào param
+        self.scope += 1
+
+        # visit danh sách tham số đầu vào
         paramList = []
         for x in ast.param:
             paramList = paramList + [self.visit(x, param)]
+
+        # visit body
         body = self.visit(ast.body, param)
+        param[self.scope].append(body)
+        print(param)
 
-        return FuncEnv(name, param)
-
+        # visit return type
+        self.getFuncEnvFromName(ast.name).returnType = self.returnType
+        print(self.getFuncEnvFromName(ast.name))
+        
+        param.pop(self.scope)
+        self.scope -= 1
+        
     def visitNumberType(self, ast, param):
         return NumberType()
 
@@ -253,13 +263,11 @@ class StaticChecker(BaseVisitor, Utils):
     def visitCallExpr(self, ast, param):
         pass
 
-    def visitId(self, ast, param):
+    def visitId(self, ast, param) -> str:
         for scope in param:
             for y in scope:
                 if y.name.name == ast.name:
-                    if type(y) is FuncEnv:
-                        return y.returnType
-                    return y.typ
+                    return y.name.name
         raise Undeclared(Identifier(), ast.name)
 
     def visitArrayCell(self, ast, param):
@@ -285,7 +293,9 @@ class StaticChecker(BaseVisitor, Utils):
             raise MustInLoop(ast)
 
     def visitReturn(self, ast, param):
-        pass
+        if ast.expr:
+            self.returnType = self.visit(ast.expr, param)
+        self.returnType = VoidType()
 
     def visitAssign(self, ast, param):
         pass
