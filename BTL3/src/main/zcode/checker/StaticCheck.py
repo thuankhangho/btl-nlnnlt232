@@ -13,12 +13,14 @@ class FuncEnv(MemberEnv):
     paramList: List[Type]
     returnType: Type
     hasBody: bool
+    body: Stmt
     
-    def __init__(self, name, paramList: List[Type] = [], returnType: Type = VoidType, hasBody: bool = False):
+    def __init__(self, name, paramList: List[Type] = [], returnType: Type = VoidType, hasBody: bool = False, body: Stmt = None):
         self.name = name
         self.paramList = paramList
         self.returnType = returnType
         self.hasBody = hasBody
+        self.body = body
 
     def __str__(self):
         return f"FuncEnv(name = {str(self.name)}, paramList = [{', '.join(str(i) for i in self.paramList)}], returnType = {str(self.returnType)}, hasBody = {str(self.hasBody)})"
@@ -72,7 +74,7 @@ class StaticChecker(BaseVisitor, Utils):
                     return True
         return False
     
-    def getFuncEnvFromName(self, name: str) -> FuncEnv:
+    def getFuncEnvFromId(self, name: Id) -> FuncEnv:
         for scope in self.param:
             for x in scope:
                 if name == x.name:
@@ -94,7 +96,7 @@ class StaticChecker(BaseVisitor, Utils):
 
     def appendFunc(self, newFunc: FuncDecl):
         if self.findNameInParam(newFunc.name):
-            existingFunc = self.getFuncEnvFromName(newFunc.name)
+            existingFunc = self.getFuncEnvFromId(newFunc.name)
             if existingFunc.hasBody == True:
                 raise Redeclared(Function(), newFunc.name.name)
             else:
@@ -105,7 +107,7 @@ class StaticChecker(BaseVisitor, Utils):
         if newFunc.body is None:
             self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType(), False))
         else:
-            self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType(), True))
+            self.param[0].append(FuncEnv(newFunc.name, paramType, VoidType(), True, newFunc.body))
 
     def appendVar(self, newVar: VarDecl):
         if self.findNameInParam(newVar.name):
@@ -116,9 +118,13 @@ class StaticChecker(BaseVisitor, Utils):
         for x in self.param[0]: # đi tìm main ở toàn cục
             if x.name.name == "main" and x.hasBody == True:
                 return
-            if x.name.name == "main" and x.hasBody == False:
-                raise NoDefinition(x.name.name)
         raise NoEntryPoint()
+    
+    def checkNoDefinition(self, ast: Program):
+        for env in self.param:
+            for x in env:
+                if x.hasBody == False:
+                    raise NoDefinition(x.name)
 
     def check(self):
         # print(self.ast)
@@ -128,6 +134,9 @@ class StaticChecker(BaseVisitor, Utils):
 
         # kiểm tra no entry point
         self.checkNoEntryPoint(self.ast)
+        
+        # kiểm tra no entry point
+        self.checkNoDefinition(self.ast)
 
         # for x in self.param:
         #     for y in x:
@@ -163,9 +172,10 @@ class StaticChecker(BaseVisitor, Utils):
             varType = self.visit(ast.varType, param)
             return VarEnv(ast.name, varType, 2)
 
-    def visitFuncDecl(self, ast, param):
+    def visitFuncDecl(self, ast: FuncDecl, param):
         param = param + [[]] # thêm 1 scope vào param
         self.scope += 1
+        newFuncEnv = self.getFuncEnvFromId(ast.name)
 
         # visit danh sách tham số đầu vào
         paramList = []
@@ -173,13 +183,13 @@ class StaticChecker(BaseVisitor, Utils):
             paramList = paramList + [self.visit(x, param)]
 
         # visit body
-        body = self.visit(ast.body, param)
+        body = self.visit(newFuncEnv.body, param)
         param[self.scope].append(body)
-        print(param)
+        # print(param)
 
-        # visit return type
-        self.getFuncEnvFromName(ast.name).returnType = self.returnType
-        print(self.getFuncEnvFromName(ast.name))
+        # get return type
+        self.getFuncEnvFromId(ast.name).returnType = self.returnType
+        # print(self.getFuncEnvFromId(ast.name))
         
         param.pop(self.scope)
         self.scope -= 1
