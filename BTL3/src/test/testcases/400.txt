@@ -1,8 +1,9 @@
 
+        func test() return 1
         func x()
         begin
-            number a
-            dynamic b <- [1, "a", 3]
+            number a <- test()
+            return
         end
-        func main() return "a"
+        func main() return
         
