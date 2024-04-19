@@ -52,8 +52,25 @@ class StaticChecker(BaseVisitor, Utils):
         ]
         self.scope = 0 # 0 = toàn cục, > 0 = trong hàm/block stmt
         self.returnType: Type = VoidType() # return type của hàm
+        self.checkParam = False # đang visit param của function hay không
         
     def compareType(self, LHS, RHS):
+        print(LHS, RHS)
+        if type(LHS) is ArrayType and type(RHS) is ArrayType:
+            if LHS.eleType == RHS.eleType and LHS.size == RHS.size:
+                return True
+            return False
+
+        if type(LHS) is ArrayType:
+            if LHS.eleType is not type(RHS):
+                return False
+            return True
+        
+        if type(RHS) is ArrayType:
+            if RHS.eleType is not type(LHS):
+                return False
+            return True
+
         if type(LHS) is not type(RHS):
             return False
         return True
@@ -158,9 +175,13 @@ class StaticChecker(BaseVisitor, Utils):
             self.visit(x, param)
 
     def visitVarDecl(self, ast, param):
+        if self.checkParam == True:
+            varType = self.visit(ast.varType, param)
+            param[self.scope].append(VarEnv(ast.name, varType))
+            return varType
+
         if ast.varInit:
             varInitType = self.visit(ast.varInit, param)
-            print(varInitType)
 
             if type(varInitType) is ArrayType:
                 varInitType = varInitType.eleType
@@ -195,8 +216,12 @@ class StaticChecker(BaseVisitor, Utils):
 
         # visit danh sách tham số đầu vào
         self.scope += 1
+        self.checkParam = True
+        paramList = []
         for x in ast.param:
-            self.visit(x, param)
+            paramList.append(self.visit(x, param))
+        newFuncEnv.paramList = paramList
+        self.checkParam = False
 
         # visit body
         body = self.visit(newFuncEnv.body, param)
@@ -204,7 +229,7 @@ class StaticChecker(BaseVisitor, Utils):
         self.scope -= 1
 
         # lấy return type
-        self.getFuncEnvFromId(ast.name).returnType = self.returnType
+        newFuncEnv.returnType = self.returnType
         
         param.pop(self.scope) # pop stack param
         self.returnType = VoidType() # xóa return type
@@ -219,7 +244,7 @@ class StaticChecker(BaseVisitor, Utils):
         return StringType()
 
     def visitArrayType(self, ast, param):
-        return ArrayType()
+        return ast
 
     def visitBinaryOp(self, ast, param):
         e1t = self.visit(ast.left, param)
@@ -301,12 +326,19 @@ class StaticChecker(BaseVisitor, Utils):
             raise Undeclared(Function(), ast.name)
         if type(func.returnType) is VoidType:
             raise TypeMismatchInExpression(ast)
-        
 
         argumentList = []
         for x in ast.args:
             argumentList.append(self.visit(x, param))
-        return
+
+        if len(argumentList) != len(func.paramList):
+            raise TypeMismatchInExpression(ast)
+        
+        for i, x in enumerate(argumentList):
+            if self.compareType(argumentList[i], func.paramList[i]) == False:
+                raise TypeMismatchInExpression(ast)
+        
+        return func.returnType
 
     def visitId(self, ast, param) -> Type:
         for scope in param:
@@ -362,14 +394,34 @@ class StaticChecker(BaseVisitor, Utils):
     def visitStringLiteral(self, ast, param):
         return StringType()
 
+    def getArrayLitEle(self, arraylit: ArrayLiteral, param):
+        value = arraylit
+        if value == []:
+            return []
+        temp = value.pop(0)
+        if type(temp) is not ArrayLiteral:
+            return [self.visit(temp, param)] + self.getArrayLitEle(value, param)
+        return [self.getArrayLitEle(temp.value, param)] + self.getArrayLitEle(value, param)
+    
+    def getSizeAndTypeOfArrayLit(self, arraylit: List, param, size, typ):
+        value = arraylit
+        if len(value) == 0:
+            return ([], None)
+        if type(value[0]) is not list:
+            size.append(len(value))
+            typ.append(self.visit(value[0], param))
+            return (size, typ)
+        size.append(len(value))
+        temp = value.pop(0)
+        typ.append(ArrayType(size, temp[0]))
+        return self.getSizeAndTypeOfArrayLit(temp, param, size, typ)
+
     def visitArrayLiteral(self, ast, param):
-        arrayLit = []
-        for x in ast.value:
-            arrayLit.append(self.visit(x, param))
-        arrayLitType = arrayLit[0]
+        arrayLit = self.getArrayLitEle(ast.value, param)
+        size, typ = self.getSizeAndTypeOfArrayLit(arrayLit, param, [], [])
         for x in arrayLit:
             if type(x) is VoidType:
                 raise TypeCannotBeInferred(ast)
-            if type(x) != type(arrayLitType):
+            if self.compareType(x, typ[0]) == False:
                 raise TypeMismatchInExpression(ast)
-        return ArrayType(arrayLit.count, arrayLitType)
+        return ArrayType(size, typ)

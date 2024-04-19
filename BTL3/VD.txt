@@ -1,0 +1,43 @@
+VD 1:
+var a <- [1,2]
+LHS = VarZcode('a'), RHS = arrayType([2], numbertype)
+-> a có kiểu là a.typ = arrayType([2], numbertype)
+
+VD 2:
+dynamic x
+var a <- x() + 1
+-> vì x() + 1 là BinaryOp ta tìm được
+ -> x có kiểu là x.typ = numberType
+-> vì + trả về numberType ta cũng tìm được a.typ = numberType
+
+VD 3:
+dynamic x
+var a <- [x,x]
+-> LHS = VarZcode('a'), RHS = ArrayZcode([VarZcode('x'),VarZcode('x')])
+-> TypeCannotBeInferred
+
+VD 4:
+func foo() begin
+    return 1
+    dynamic a
+    return a
+end
+-> bước return 1 
+    -> LHS = self.function, RHS = NumberType
+    -> ta thu được self.function.typ = NumberType (lúc này trong param cũng thay đổi type vì truyền theo cơ chế reference)
+-> bước return a
+    -> LHS = numberType (vì hàm đã có kiểu), RHS = varZcode('a')
+    -> ta thu được a.typ = numberType
+-> hàm này có kiểu trả về là NumberType
+
+
+VD 5:
+func foo()
+number x <- foo()
+func foo() begin
+end
+-> number x <- foo() 
+    -> thu được hàm foo có type = NumberType
+-> end
+    -> ta thấy self.Return =False nghĩa là hàm này không có một biểu thức return nào
+    -> suy ra hàm này VoidType mà lúc trước đã tìm hàm foo có type = NumberType -> lỗi

@@ -1,0 +1,43 @@
+VD 1: 
+
+self.listFunction = {'foo1' : FuncZcode([], None, True)}
+func foo1()
+self.function = self.listFunction['foo1']
+begin
+    return # self.function.typ = VoidType
+end
+
+self.listFunction = {'foo1' : FuncZcode([], VoidType, True), 'foo2' : FuncZcode([], None, True)}
+func foo2()
+self.function = self.listFunction['foo2']
+begin
+    return 1 # self.function.typ = NumberType
+    return   # vì VoidType !=  NumberType -> LỖI
+end
+
+self.listFunction = {'foo1' : FuncZcode([], VoidType, True), 'foo2' : FuncZcode([], NumberType, True)}
+
+
+
+VD 2: 
+self.listFunction = {'foo1' : FuncZcode([], None, True)}
+func foo1()
+self.function = self.listFunction['foo1']
+self.Return = False
+begin
+
+end
+# vì không có return (self.Return = False) nên self.function.typ = VoidType vì lúc này self.function.typ cũng đang None
+
+
+self.listFunction = {'foo1' : FuncZcode([], VoidType, True), 'foo2' : FuncZcode([], None, True)}
+func foo2()
+self.function = self.listFunction['foo2']
+self.Return = False
+begin
+    self.Return = True
+    return 1 # self.function.typ = NumberType
+end
+
+# vì có return nên không xét tới self.function.typ = VoidType
+self.listFunction = {'foo1' : FuncZcode([], VoidType, True), 'foo2' : FuncZcode([], NumberType, True)}

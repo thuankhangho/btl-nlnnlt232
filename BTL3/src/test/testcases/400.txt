@@ -1,9 +1,5 @@
 
-        func test() return 1
-        func x()
-        begin
-            number a <- test()
-            return
+        func main() begin
+            number a <- [1, 2, [3]]
         end
-        func main() return
         
