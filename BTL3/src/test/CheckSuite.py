@@ -6,8 +6,9 @@ from AST import *
 class CheckSuite(unittest.TestCase):
     def test_no_entry_point(self):
         input = """
+        func x() return
         func main() begin
-            number a <- [1, 2, [3]]
+          number a <- x()
         end
         """
         expect = "Type Mismatch In Expression: BinaryOp(+, Id(a), Id(b))"
