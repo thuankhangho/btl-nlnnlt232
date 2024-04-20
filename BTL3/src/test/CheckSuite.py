@@ -18,9 +18,11 @@ class CheckSuite(unittest.TestCase):
     def test_401(self):
         input = """
         func main() return
-        func f()begin
-string a <- [[1, 4], [1, 2], [3, 4]]
-end
+        number a
+        func f()
+        begin
+            a[0] <- 2
+        end
         """
         expect = "Type Mismatch In Expression: BinaryOp(+, Id(a), Id(b))"
         self.assertTrue(TestChecker.test(input, expect, 401))

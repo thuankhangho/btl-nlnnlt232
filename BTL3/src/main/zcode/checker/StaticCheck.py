@@ -363,6 +363,8 @@ class StaticChecker(BaseVisitor, Utils):
 
     def visitIf(self, ast: If, param):
         expr = self.visit(ast.expr, param)
+        if type(expr) is not BoolType():
+            raise TypeMismatchInStatement(ast)
         thenStmt = self.visit(ast.thenStmt, param)
         # elifStmt = self.visit(ast.elifStmt, param)
         # elseStmt = self.visit(ast.elseStmt, param)
@@ -412,7 +414,11 @@ class StaticChecker(BaseVisitor, Utils):
         #     self.returnType = VoidType()
 
     def visitAssign(self, ast: Assign, param):
-        pass
+        lhs = self.visit(ast.lhs, param)
+        rhs = self.visit(ast.rhs, param)
+        
+        if type(lhs) is VoidType or type(rhs) is VoidType:
+            raise TypeMismatchInStatement(ast)
 
     def visitCallStmt(self, ast: CallStmt, param):
         pass
