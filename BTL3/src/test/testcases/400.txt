@@ -1,6 +1,7 @@
 
-        func x() return
         func main() begin
-          number a <- x()
+          dynamic a
+          dynamic b
+          dynamic c <- a[0] + b
         end
         

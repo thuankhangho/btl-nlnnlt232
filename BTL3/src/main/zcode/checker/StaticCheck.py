@@ -25,7 +25,6 @@ class FuncEnv(MemberEnv):
     def __str__(self):
         return f"FuncEnv(name = {str(self.name)}, paramList = [{', '.join(str(i) for i in self.paramList)}], returnType = {str(self.returnType)}, hasBody = {str(self.hasBody)})"
 
-
 class VarEnv(MemberEnv):
     name: Id
     typ: Type
@@ -51,8 +50,9 @@ class StaticChecker(BaseVisitor, Utils):
             ]
         ]
         self.scope = 0 # 0 = toàn cục, > 0 = trong hàm/block stmt
-        self.returnType: Type = VoidType() # return type của hàm
+        self.returnType: Type = None # return type của hàm
         self.checkParam = False # đang visit param của function hay không
+        self.currentFunc = "" # kiểm tra hàm hiện tại đang check là gì
         
     def compareType(self, LHS, RHS):
         if type(LHS) is ArrayType and type(RHS) is ArrayType:
@@ -126,11 +126,14 @@ class StaticChecker(BaseVisitor, Utils):
     def appendVar(self, newVar: VarDecl):
         if self.findNameInParam(newVar.name):
             raise Redeclared(Variable(), newVar.name.name)
-        self.param[0].append(VarEnv(newVar.name, newVar.varType, newVar.modifier))
+        if newVar.varType is None:
+            self.param[0].append(VarEnv(newVar.name, VoidType(), newVar.modifier))
+        else:
+            self.param[0].append(VarEnv(newVar.name, newVar.varType, newVar.modifier))
         
     def checkNoEntryPoint(self, ast: Program):
         for x in self.param[0]: # đi tìm main ở toàn cục
-            if x.name.name == "main" and x.paramList == []:
+            if type(x) is FuncEnv and x.name.name == "main" and x.paramList == []:
                 return
         raise NoEntryPoint()
     
@@ -162,7 +165,7 @@ class StaticChecker(BaseVisitor, Utils):
         # kiểm tra no entry point
         self.checkNoEntryPoint(self.ast)
         
-        # kiểm tra no entry point
+        # kiểm tra no definition
         self.checkNoDefinition(self.ast)
 
         # visit phần còn lại
@@ -202,12 +205,13 @@ class StaticChecker(BaseVisitor, Utils):
         elif ast.modifier is None:
             varType = self.visit(ast.varType, param)
             # print(ast.name, varType, varInitType)
-            if self.compareType(varType, varInitType):
+            if self.compareType(varType, varInitType) or type(varInitType) is VoidType:
                 param[self.scope].append(VarEnv(ast.name, varType))
             else:
                 raise TypeMismatchInStatement(ast)
 
     def visitFuncDecl(self, ast: FuncDecl, param):
+        self.currentFunc = ast.name.name
         param = param + [[]] # thêm 1 scope vào param
         newFuncEnv = self.getFuncEnvFromId(ast.name)
 
@@ -230,6 +234,7 @@ class StaticChecker(BaseVisitor, Utils):
         
         param.pop(self.scope) # pop stack param
         self.returnType = VoidType() # xóa return type
+        self.currentFunc = "" # xóa tên hàm đang check hiện tại
         
     def visitNumberType(self, ast: NumberType, param):
         return NumberType()
@@ -249,45 +254,46 @@ class StaticChecker(BaseVisitor, Utils):
 
         if ast.op == "...":
             if type(e1t) is VoidType:
-                e1t = self.infer(ast.left.name, StringType(), param)
+                e1t = self.infer(ast.left, StringType(), param)
             if type(e2t) is VoidType:
-                e2t = self.infer(ast.right.name, StringType(), param)
+                e2t = self.infer(ast.right, StringType(), param)
             if type(e1t) is not StringType or type(e2t) is not StringType:
                 raise TypeMismatchInExpression(ast)
             return StringType()
         
         if ast.op == "==":
             if type(e1t) is VoidType:
-                e1t = self.infer(ast.left.name, StringType(), param)
+                e1t = self.infer(ast.left, StringType(), param)
             if type(e2t) is VoidType:
-                e2t = self.infer(ast.right.name, StringType(), param)
+                e2t = self.infer(ast.right, StringType(), param)
             if type(e1t) is not StringType or type(e2t) is not StringType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
         
         if ast.op in ["=", "!=", "<", ">", "<=", ">="]:
             if type(e1t) is VoidType:
-                e1t = self.infer(ast.left.name, NumberType(), param)
+                e1t = self.infer(ast.left, NumberType(), param)
             if type(e2t) is VoidType:
-                e2t = self.infer(ast.right.name, NumberType(), param)
+                e2t = self.infer(ast.right, NumberType(), param)
             if type(e1t) is not NumberType or type(e2t) is not NumberType:
+                # print(type(e1t))
                 raise TypeMismatchInExpression(ast)
             return NumberType()
         
         if ast.op in ["and", "or"]:
             if type(e1t) is VoidType:
-                e1t = self.infer(ast.left.name, BoolType(), param)
+                e1t = self.infer(ast.left, BoolType(), param)
             if type(e2t) is VoidType:
-                e2t = self.infer(ast.right.name, BoolType(), param)
+                e2t = self.infer(ast.right, BoolType(), param)
             if type(e1t) is not BoolType or type(e2t) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
         
         if ast.op in ["+", "-"]:
             if type(e1t) is VoidType:
-                e1t = self.infer(ast.left.name, NumberType(), param)
+                e1t = self.infer(ast.left, NumberType(), param)
             if type(e2t) is VoidType:
-                e2t = self.infer(ast.right.name, NumberType(), param)
+                e2t = self.infer(ast.right, NumberType(), param)
             if type(e1t) is not NumberType or type(e2t) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
@@ -297,24 +303,17 @@ class StaticChecker(BaseVisitor, Utils):
 
         if ast.op == "not":
             if type(et) is VoidType:
-                et = self.infer(ast.operand.name, BoolType(), param)
+                et = self.infer(ast.operand, BoolType(), param)
             if type(et) is not BoolType:
                 raise TypeMismatchInExpression(ast)
             return BoolType()
         
         if ast.op == "-":
             if type(et) is VoidType:
-                et = self.infer(ast.operand.name, NumberType(), param)
+                et = self.infer(ast.operand, NumberType(), param)
             if type(et) is not NumberType:
                 raise TypeMismatchInExpression(ast)
             return NumberType()
-        
-        # if ast.op == '[]':
-        #     if type(et) is VoidType:
-        #         et = self.infer(ast.operand.name, NumberType(), param)
-        #     if type(et) is not NumberType:
-        #         raise TypeMismatchInExpression(ast)
-        #     return NumberType() # cần phải sửa
 
     def visitCallExpr(self, ast: CallExpr, param):
         func = self.getFuncEnvFromId(ast.name)
@@ -353,7 +352,7 @@ class StaticChecker(BaseVisitor, Utils):
             idx.append(self.visit(x, param)) # [0]
 
         size, typ = self.getSizeAndTypeOfArrayLit(idx, param, [], [])
-        if expr.size != size or type(typ[0]) != NumberType:
+        if len(expr.size) != size[0] or type(typ[-1]) != NumberType:
             raise TypeMismatchInExpression(ast)
         # print(expr, size, expr.eleType)
         return expr.eleType
@@ -363,11 +362,21 @@ class StaticChecker(BaseVisitor, Utils):
             self.visit(x, param)
 
     def visitIf(self, ast: If, param):
-        pass
+        expr = self.visit(ast.expr, param)
+        thenStmt = self.visit(ast.thenStmt, param)
+        # elifStmt = self.visit(ast.elifStmt, param)
+        # elseStmt = self.visit(ast.elseStmt, param)
 
     def visitFor(self, ast: For, param):
+        param = param + [[]] # thêm 1 scope vào param
+        self.scope += 1
+
         self.loop += 1
-        self.visit(ast.body, [{}] + param)
+        body = self.visit(ast.body, param)
+        param[self.scope].append(body)
+        
+        self.scope -= 1
+        param.pop(self.scope) # pop stack param
         self.loop -= 1
 
     def visitContinue(self, ast: Continue, param):
@@ -380,12 +389,27 @@ class StaticChecker(BaseVisitor, Utils):
 
     def visitReturn(self, ast: Return, param):
         if ast.expr:
-            if type(self.visit(ast.expr, param)) is VoidType:
+            if self.currentFunc == "main":
+                raise NoEntryPoint()
+            returnExpr = self.visit(ast.expr, param)
+            if type(returnExpr) is VoidType:
                 raise TypeCannotBeInferred(ast)
             if type(self.returnType) is not None:
-                self.returnType = self.visit(ast.expr, param)
+                self.returnType = returnExpr
         else:
             self.returnType = VoidType()
+        # if ast.expr:
+        #     returnExpr = self.visit(ast.expr, param)
+        #     if type(returnExpr) is VoidType:
+        #         raise TypeCannotBeInferred(ast)
+        #     if type(self.returnType) is not VoidType:
+        #         self.returnType = self.visit(ast.expr, param)
+        # if self.currentFunc == "main":
+        #     returnExpr = self.visit(ast.expr, param)
+        #     if ast.expr or type(returnExpr) is not VoidType:
+        #         raise NoEntryPoint()
+        # else:
+        #     self.returnType = VoidType()
 
     def visitAssign(self, ast: Assign, param):
         pass
@@ -403,7 +427,7 @@ class StaticChecker(BaseVisitor, Utils):
         return StringType()
 
     def getArrayLitEle(self, arraylit: ArrayLiteral, param):
-        value = arraylit
+        value = arraylit.copy()
         if value == []:
             return []
         temp = value.pop(0)
@@ -412,9 +436,13 @@ class StaticChecker(BaseVisitor, Utils):
         return [self.getArrayLitEle(temp.value, param)] + self.getArrayLitEle(value, param)
     
     def getSizeAndTypeOfArrayLit(self, arraylit: List, param, size, typ):
-        value = arraylit
+        value = arraylit.copy()
         if len(value) == 0:
-            return ([], None)
+            return ([], VoidType())
+        if type(value[0]) is VoidType:
+            size.append(float(len(value)))
+            typ.append(VoidType)
+            return (size, typ)
         if type(value[0]) is not list:
             size.append(float(len(value)))
             typ.append(self.visit(value[0], param))
@@ -423,13 +451,42 @@ class StaticChecker(BaseVisitor, Utils):
         temp = value.pop(0)
         typ.append(ArrayType(size, temp[0]))
         return self.getSizeAndTypeOfArrayLit(temp, param, size, typ)
+    
+    def conformToTheType(self, naughtylist, typ):
+        value = naughtylist.copy()
+        if value == []:
+            return True
+        temp = value.pop(0)
+        if type(temp) is list:
+            return self.conformToTheType(temp, typ) and self.conformToTheType(value, typ)
+        return (type(temp) == type(typ)) and self.conformToTheType(value, typ)
+    
+    def conformToTheSize(self, naughtylist, size, idx):
+        value = naughtylist.copy()
+        if len(value) < size[idx]:
+            return False
+        temp = value[0]
+        if type(temp) is not list:
+            return (len(value) == size[idx])
+        print(size[idx])
+        return self.conformToTheSize(temp, size, idx + 1) and self.conformToTheSize(value, size, idx)
 
     def visitArrayLiteral(self, ast: ArrayLiteral, param):
         arrayLit = self.getArrayLitEle(ast.value, param)
         size, typ = self.getSizeAndTypeOfArrayLit(arrayLit, param, [], [])
+        # print(size, typ[-1])
         for x in arrayLit:
             if type(x) is VoidType:
                 raise TypeCannotBeInferred(ast)
-            if self.compareType(x, typ[0]) == False:
-                raise TypeMismatchInExpression(ast)
-        return ArrayType(size, typ[0])
+            if type(x) is list:
+                print(x, self.conformToTheSize(x, size, 1))
+                # return
+        #         if len(size) <= 1:
+        #             raise TypeMismatchInExpression(ast)
+        #         if self.conformToTheType(x, typ[-1]) == False:
+        #             raise TypeMismatchInExpression(ast)
+        #         # y: ArrayType = self.visit(ArrayLiteral(x), param)
+        #         # if y.size[-1] != size[idx] or self.compareType(y.eleType, typ[-1]) == False:
+        #     elif self.compareType(x, typ[0]) == False:
+        #         raise TypeMismatchInExpression(ast)
+        # return ArrayType(size, typ[-1])
