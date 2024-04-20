@@ -3,5 +3,5 @@
         "./BTL3/src/main/zcode/utils"
     ],
     "python.analysis.typeCheckingMode": "off",
-    "python.analysis.autoImportCompletions": false
+    "python.analysis.autoImportCompletions": true
 }

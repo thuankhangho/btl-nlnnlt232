@@ -459,34 +459,31 @@ class StaticChecker(BaseVisitor, Utils):
         temp = value.pop(0)
         if type(temp) is list:
             return self.conformToTheType(temp, typ) and self.conformToTheType(value, typ)
-        return (type(temp) == type(typ)) and self.conformToTheType(value, typ)
+        return (self.compareType(temp, typ)) and self.conformToTheType(value, typ)
     
     def conformToTheSize(self, naughtylist, size, idx):
         value = naughtylist.copy()
-        if len(value) < size[idx]:
+        if len(value) != size[idx]:
             return False
-        temp = value[0]
-        if type(temp) is not list:
-            return (len(value) == size[idx])
-        print(size[idx])
-        return self.conformToTheSize(temp, size, idx + 1) and self.conformToTheSize(value, size, idx)
+        for x in naughtylist:
+            if type(x) is list:
+                if self.conformToTheSize(x, size, idx + 1) == False:
+                    return False
+        return True
 
     def visitArrayLiteral(self, ast: ArrayLiteral, param):
         arrayLit = self.getArrayLitEle(ast.value, param)
         size, typ = self.getSizeAndTypeOfArrayLit(arrayLit, param, [], [])
-        # print(size, typ[-1])
+        if self.conformToTheSize(arrayLit, size, 0) == False:
+            raise TypeMismatchInExpression(ast)
         for x in arrayLit:
             if type(x) is VoidType:
                 raise TypeCannotBeInferred(ast)
             if type(x) is list:
-                print(x, self.conformToTheSize(x, size, 1))
-                # return
-        #         if len(size) <= 1:
-        #             raise TypeMismatchInExpression(ast)
-        #         if self.conformToTheType(x, typ[-1]) == False:
-        #             raise TypeMismatchInExpression(ast)
-        #         # y: ArrayType = self.visit(ArrayLiteral(x), param)
-        #         # if y.size[-1] != size[idx] or self.compareType(y.eleType, typ[-1]) == False:
-        #     elif self.compareType(x, typ[0]) == False:
-        #         raise TypeMismatchInExpression(ast)
-        # return ArrayType(size, typ[-1])
+                if len(size) <= 1:
+                    raise TypeMismatchInExpression(ast)
+                if self.conformToTheType(x, typ[-1]) == False:
+                    raise TypeMismatchInExpression(ast)
+            elif self.compareType(x, typ[0]) == False:
+                raise TypeMismatchInExpression(ast)
+        return ArrayType(size, typ[-1])

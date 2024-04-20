@@ -19,7 +19,7 @@ class CheckSuite(unittest.TestCase):
         input = """
         func main() return
         func f()begin
-dynamic a <- [[[1]], [1, 2], [3, 4]]
+string a <- [[1, 4], [1, 2], [3, 4]]
 end
         """
         expect = "Type Mismatch In Expression: BinaryOp(+, Id(a), Id(b))"
