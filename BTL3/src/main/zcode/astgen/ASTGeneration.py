@@ -234,12 +234,12 @@ class ASTGeneration(ZCodeVisitor):
 
     # expr8: IDENTIFIER | literal | LRB expr RRB | functioncall;
     def visitExpr8(self, ctx:ZCodeParser.Expr8Context):
-        if ctx.IDENTIFIER():
+        if ctx.expr():
+            return self.visit(ctx.expr())
+        elif ctx.IDENTIFIER():
             return Id(ctx.IDENTIFIER().getText())
         elif ctx.literal():
             return self.visit(ctx.literal())
-        elif ctx.expr():
-            return self.visit(ctx.expr())
         return self.visit(ctx.functioncall())
 
 

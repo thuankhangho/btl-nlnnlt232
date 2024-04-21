@@ -1,1 +1,1 @@
-Type Mismatch In Expression: ArrayCell(Id(a), [NumLit(0.0)])
+Type Mismatch In Expression: ArrayLit(NumLit(1.0), StringLit(true))

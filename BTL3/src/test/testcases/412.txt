@@ -1,0 +1,8 @@
+
+            func test()
+            begin
+                dynamic a
+                return 1
+            end
+            func main() return 1
+        

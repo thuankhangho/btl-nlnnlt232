@@ -1,0 +1,6 @@
+
+            func main() begin
+                number age <- name + 12
+                string name
+            end
+        

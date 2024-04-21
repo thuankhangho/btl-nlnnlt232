@@ -1,0 +1,8 @@
+
+        func main() return
+        number a
+        func f()
+        begin
+            a[0] <- 2
+        end
+        

@@ -1,6 +1,6 @@
 
         func main() begin
-          dynamic a
+          number a[2] <- [1, "true"]
           dynamic b
           dynamic c <- a[0] + b
         end

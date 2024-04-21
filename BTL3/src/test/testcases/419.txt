@@ -1,0 +1,7 @@
+
+            func main() begin
+                dynamic a
+                dynamic b
+                return 1
+            end
+        

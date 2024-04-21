@@ -1,0 +1,15 @@
+
+        number i <- 2
+        number x <- 10
+        func test()
+        begin
+            var a <- 3
+            for i until i > x / 2 by 1
+            begin
+                var e <- 3
+                a <- 1 + 2
+            end
+            e <- 5
+        end
+            func main() return
+        

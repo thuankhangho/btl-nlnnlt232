@@ -1,0 +1,10 @@
+
+            func foo(number x) begin
+                return 1
+            end
+            func test()
+            begin
+                number x <- 2 / foo()
+            end
+            func main() return
+        
