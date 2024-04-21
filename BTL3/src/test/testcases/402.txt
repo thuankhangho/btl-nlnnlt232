@@ -1,0 +1,11 @@
+
+        dynamic e <- "2"
+        func main() return
+        func j()
+        begin
+            dynamic e <- 3
+            dynamic f
+            f <- e
+            number a <- 2 + e
+        end
+        
