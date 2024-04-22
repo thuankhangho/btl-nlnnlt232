@@ -201,26 +201,25 @@ class StaticChecker(BaseVisitor, Utils):
                 varEnv = self.getVarEnvFromId(ast.name, param)
                 if type(varEnv.typ) is NoneType and varInitType is not None:
                     varEnv.typ = varInitType
-                    return
+                    return VarEnv(ast.name, varInitType, 2)
+                return VarEnv(ast.name, varEnv.typ, 2)
             else:
                 for x in param[self.scope]:
                     if x.name == ast.name and type(x) is VarEnv:
                         raise Redeclared(Variable(), ast.name.name)
-                    
             if varInitType is None:
                 param[self.scope].append(VarEnv(ast.name, NoneType(), 0))
                 return VarEnv(ast.name, NoneType(), 0)
             elif type(varInitType) is NoneType:
                 raise TypeCannotBeInferred(ast)
-            param[self.scope].append(VarEnv(ast.name, varInitType, 0))
+            param[self.scope].append(VarEnv(ast.name, varInitType))
             return VarEnv(ast.name, varInitType, 0)
-            # param[self.scope].append(VarEnv(ast.name, varType))
 
         elif ast.modifier == "var": # Var
             if self.scope == 0:
                 varEnv = self.getVarEnvFromId(ast.name, param) # -> VarEnv
                 varEnv.typ = varInitType
-                return
+                return VarEnv(ast.name, varEnv.typ, 2)
             else:
                 for x in param[self.scope]:
                     if x.name == ast.name and type(x) is VarEnv:
@@ -244,23 +243,27 @@ class StaticChecker(BaseVisitor, Utils):
             if self.scope == 0:
                 varEnv = self.getVarEnvFromId(ast.name, param)
                 if varInitType is None:
-                    return
+                    return VarEnv(ast.name, varEnv.typ, 2)
                 if self.compareType(varEnv.typ, varInitType) and type(varInitType) is not VoidType and type(varInitType) is not NoneType:
                     varEnv.typ = varInitType
-                    return
+                    return VarEnv(ast.name, varInitType, 1)
                 else:
-                    raise TypeMismatchInStatement(ast)  
+                    raise TypeMismatchInStatement(ast)
             else:
                 for x in param[self.scope]:
                     if x.name == ast.name and type(x) is VarEnv:
                         raise Redeclared(Variable(), ast.name.name)
             
             varType = self.visit(ast.varType, param)
-            if self.compareType(varType, varInitType) or varInitType is None: # không có varInit
+            if varInitType is None:
                 param[self.scope].append(VarEnv(ast.name, varType, 2))
                 return VarEnv(ast.name, varType, 2)
             else:
-                raise TypeMismatchInStatement(ast)  
+                if self.compareType(varType, varInitType):
+                    param[self.scope].append(VarEnv(ast.name, varInitType, 2))
+                    return VarEnv(ast.name, varInitType, 2)
+                else:
+                    raise TypeMismatchInStatement(ast)
 
     def visitFuncDecl(self, ast: FuncDecl, param):
         self.currentFunc = ast.name.name
@@ -390,7 +393,8 @@ class StaticChecker(BaseVisitor, Utils):
         return func.returnType
 
     def visitId(self, ast: Id, param) -> Type:
-        for scope in param:
+        newParam = list(reversed(param))
+        for scope in newParam:
             for y in scope:
                 if y.name.name == ast.name:
                     return y.returnType if type(y) is FuncEnv else y.typ
@@ -411,10 +415,13 @@ class StaticChecker(BaseVisitor, Utils):
         return expr.eleType
 
     def visitBlock(self, ast: Block, param):
-        stmtList = []
         for x in ast.stmt:
-           stmtList.append(self.visit(x, param))
-        return stmtList
+           self.visit(x, param)
+
+        # stmtList = []
+        # for x in ast.stmt:
+        #    stmtList.append(self.visit(x, param))
+        # return stmtList
 
     def visitIf(self, ast: If, param):
         param = param + [[]]
@@ -423,7 +430,9 @@ class StaticChecker(BaseVisitor, Utils):
         expr = self.visit(ast.expr, param)
         if type(expr) is not BoolType:
             raise TypeMismatchInStatement(ast)
-        param[self.scope] = self.visit(ast.thenStmt, param)
+        
+        self.visit(ast.thenStmt, param)
+
         for x in ast.elifStmt:
             self.visit(x, param)
         if ast.elseStmt:
@@ -464,10 +473,9 @@ class StaticChecker(BaseVisitor, Utils):
             if self.currentFunc == "main":
                 raise NoEntryPoint()
             returnExpr = self.visit(ast.expr, param)
-            if type(returnExpr) is VoidType or returnExpr is None:
+            if type(returnExpr) is VoidType or type(returnExpr) is NoneType:
                 raise TypeCannotBeInferred(ast)
-            if self.returnType is None:
-                self.returnType = returnExpr
+            self.returnType = returnExpr
         else:
             self.returnType = VoidType()
         # if ast.expr:
@@ -487,9 +495,9 @@ class StaticChecker(BaseVisitor, Utils):
         lhs = self.visit(ast.lhs, param)
         rhs = self.visit(ast.rhs, param)
 
-        if lhs is None and rhs is None:
+        if type(lhs) is NoneType and type(rhs) is NoneType:
             raise TypeCannotBeInferred(ast)
-        if lhs is None:
+        if type(lhs) is NoneType:
             varEnv = self.getVarEnvFromId(ast.lhs, param)
             varEnv.typ = rhs
             return

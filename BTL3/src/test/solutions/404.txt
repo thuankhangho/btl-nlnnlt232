@@ -1,1 +1,1 @@
-Type Mismatch In Expression: CallExpr(Id(f), [])
+Type Mismatch In Statement: VarDecl(Id(a), ArrayType([1.0], NumberType), None, CallExpr(Id(f), []))
