@@ -5,8 +5,25 @@
 *   This class provides facilities for method generation
 *
 '''
-from abc import ABC, abstractmethod, ABCMeta
+#################################################################################################################################
+class IllegalOperandException(Exception):
+    def __init__(self, msg):
+        # msg:string
+        self.s = msg
 
+    def __str__(self):
+        return "Illegal Operand: " + self.s + "\n"
+#################################################################################################################################
+
+class IllegalRuntimeException(Exception):
+    def __init__(self, msg):
+        # msg:string
+        self.s = msg
+
+    def __str__(self):
+        return "Illegal Runtime: " + self.s + "\n"
+
+from abc import ABC, abstractmethod, ABCMeta
 
 class MachineCode(ABC):
     @abstractmethod
@@ -564,7 +581,7 @@ class JasminCode(MachineCode):
         return JasminCode.INDENT + "ior" + JasminCode.END
 
     def emitIREM(self):
-        return JasminCode.INDENT + "rem" + JasminCode.END
+        return JasminCode.INDENT + "irem" + JasminCode.END
 
     def emitIFACMPEQ(self, label):
         # label: Int
@@ -628,7 +645,7 @@ class JasminCode(MachineCode):
 
     def emitGOTO(self, label):
         # label: Int
-        return JasminCode.INDENT + "goto Label" + label + JasminCode.END
+        return JasminCode.INDENT + "goto Label" + str(label) + JasminCode.END
 
     def emitINEG(self):
         return JasminCode.INDENT + "ineg" + JasminCode.END

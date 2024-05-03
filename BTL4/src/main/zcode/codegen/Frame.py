@@ -1,5 +1,22 @@
 from Utils import *
 
+class IllegalOperandException(Exception):
+    def __init__(self, msg):
+        # msg:string
+        self.s = msg
+
+    def __str__(self):
+        return "Illegal Operand: " + self.s + "\n"
+
+
+class IllegalRuntimeException(Exception):
+    def __init__(self, msg):
+        # msg:string
+        self.s = msg
+
+    def __str__(self):
+        return "Illegal Runtime: " + self.s + "\n"
+
 
 class Frame():
     def __init__(self, name, returnType):
@@ -186,6 +203,6 @@ class Frame():
     '''
 
     def getBreakLabel(self):
-        if not brkLabel:
+        if not self.brkLabel:
             raise IllegalRuntimeException("None break label")
         return self.brkLabel[-1]

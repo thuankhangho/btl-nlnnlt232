@@ -5,7 +5,6 @@ import CodeGenerator as cgen
 from MachineCode import JasminCode
 from AST import *
 
-
 class Emitter():
     def __init__(self, filename):
         self.filename = filename
@@ -14,7 +13,7 @@ class Emitter():
 
     def getJVMType(self, inType):
         typeIn = type(inType)
-        if typeIn is IntType:
+        if typeIn is NumberType:
             return "I"
         elif typeIn is StringType:
             return "Ljava/lang/String;"
@@ -29,7 +28,7 @@ class Emitter():
 
     def getFullType(inType):
         typeIn = type(inType)
-        if typeIn is IntType:
+        if typeIn is NumberType:
             return "int"
         elif typeIn is StringType:
             return "java/lang/String"

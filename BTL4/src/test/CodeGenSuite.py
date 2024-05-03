@@ -4,7 +4,7 @@ from AST import *
 
 
 class CheckCodeGenSuite(unittest.TestCase):
-    def test_number(self):
+    def test_500(self):
         input = """func main ()
         begin
             writeNumber(1)
