@@ -339,13 +339,13 @@ class CodeGenerator:
         self.libName = "io"
 
     def init(self):
-        return [Symbol("readInt", MType(list(), IntType()), CName(self.libName)),
-                Symbol("writeInt", MType([IntType()],
+        return [Symbol("readInt", MType(list(), NumberType()), CName(self.libName)),
+                Symbol("writeInt", MType([NumberType()],
                        VoidType()), CName(self.libName)),
-                Symbol("writeIntLn", MType(
-                    [IntType()], VoidType()), CName(self.libName)),
-                Symbol("writeFloat", MType(
-                    [FloatType()], VoidType()), CName(self.libName))
+                # Symbol("writeIntLn", MType(
+                #     [NumberType()], VoidType()), CName(self.libName)),
+                # Symbol("writeFloat", MType(
+                #     [FloatType()], VoidType()), CName(self.libName))
                 ]
 
     def gen(self, ast, path):
@@ -468,7 +468,7 @@ class CodeGenVisitor(BaseVisitor):
             cname + "/" + ast.method.name, ctype, frame))
 
     def visitNumberLiteral(self, ast, o):
-        return self.emit.emitPUSHFCONST(ast.value, o.frame), IntType()
+        return self.emit.emitPUSHFCONST(ast.value, o.frame), NumberType()
 
     def visitBinaryOp(self, ast, o):
         e1c, e1t = self.visit(ast.left, o)
