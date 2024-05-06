@@ -339,14 +339,14 @@ class CodeGenerator:
         self.libName = "io"
 
     def init(self):
-        return [Symbol("readInt", MType(list(), NumberType()), CName(self.libName)),
-                Symbol("writeInt", MType([NumberType()],
-                       VoidType()), CName(self.libName)),
-                # Symbol("writeIntLn", MType(
-                #     [NumberType()], VoidType()), CName(self.libName)),
-                # Symbol("writeFloat", MType(
-                #     [FloatType()], VoidType()), CName(self.libName))
-                ]
+        return [[
+            Symbol("readNumber", MType([], NumberType()), CName(self.libName)),
+            Symbol("writeInt", MType([NumberType()], VoidType()), CName(self.libName)),
+            Symbol("readBool", MType([], BoolType()), CName(self.libName)),
+            Symbol("writeBool", MType([BoolType()], VoidType()), CName(self.libName)),
+            Symbol("readString", MType([], StringType()), CName(self.libName)),
+            Symbol("writeString", MType([StringType()], VoidType()), CName(self.libName))
+        ]]
 
     def gen(self, ast, path):
         # ast: AST
@@ -381,26 +381,24 @@ class CName(Val):
 
 class CodeGenVisitor(BaseVisitor):
     def __init__(self, astTree, env, path):
+        # astTree: AST
+        # env: List[Symbol]
+        # path: File
+
         self.astTree = astTree
         self.env = env
+        self.className = "ZCodeClass"
         self.path = path
+        self.emit = Emitter(self.path + "/" + self.className + ".j")
 
     def visitProgram(self, ast, c):
-        [self.visit(i, c)for i in ast.decl]
-        return c
+        self.emit.printout(self.emit.emitPROLOG(self.className, "java.lang.Object"))
+        [self.visit(ele, SubBody(None, self.env)) for ele in ast.memlist if type(ele) == FuncDecl]
+        self.genMETHOD(FuncDecl(Id("<init>"), [], Block()), c, Frame("<init>", VoidType()))
+        self.emit.emitEPILOG()
 
     def visitClassDecl(self, ast, c):
-        self.className = ast.classname.name
-        self.emit = Emitter(self.path+"/" + self.className + ".j")
-        self.emit.printout(self.emit.emitPROLOG(
-            self.className, "java.lang.Object"))
-        [self.visit(ele, SubBody(None, self.env))
-         for ele in ast.memlist if type(ele) == MethodDecl]
-        # generate default constructor
-        self.genMETHOD(MethodDecl(Instance(), Id("<init>"), list(
-        ), None, Block([], [])), c, Frame("<init>", VoidType()))
-        self.emit.emitEPILOG()
-        return c
+        pass
 
     def genMETHOD(self, consdecl, o, frame):
         isInit = consdecl.returnType is None
@@ -448,24 +446,10 @@ class CodeGenVisitor(BaseVisitor):
         frame.exitScope()
 
     def visitMethodDecl(self, ast, o):
-        frame = Frame(ast.name, ast.returnType)
-        self.genMETHOD(ast, o.sym, frame)
-        return Symbol(ast.name, MType([x.typ for x in ast.param], ast.returnType), CName(self.className))
+        pass
 
     def visitCallStmt(self, ast, o):
-        ctxt = o
-        frame = ctxt.frame
-        nenv = ctxt.sym
-        sym = next(filter(lambda x: ast.method.name == x.name, nenv), None)
-        cname = sym.value.value
-        ctype = sym.mtype
-        in_ = ("", list())
-        for x in ast.param:
-            str1, typ1 = self.visit(x, Access(frame, nenv, False, True))
-            in_ = (in_[0] + str1, in_[1].append(typ1))
-        self.emit.printout(in_[0])
-        self.emit.printout(self.emit.emitINVOKESTATIC(
-            cname + "/" + ast.method.name, ctype, frame))
+        pass
 
     def visitNumberLiteral(self, ast, o):
         return self.emit.emitPUSHFCONST(ast.value, o.frame), NumberType()
