@@ -44,7 +44,7 @@ class CodeGenVisitor(BaseVisitor):
     
     #* CẬP NHẬT TYPE
     def LHS_RHS(self, LHS, RHS, o):
-        #* TRUYỀN checkTypeLHS_RHS = Flase -> nghĩa là chúng ta xét type trước, trước khi lấy stack
+        #* TRUYỀN checkTypeLHS_RHS = False -> nghĩa là chúng ta xét type trước, trước khi lấy stack
         _, rhsType = self.visit(RHS, Access(o.frame, o.symbol, False, True))
         _, lhsType = self.visit(LHS, Access(o.frame, o.symbol, True, True))
         if isinstance(lhsType, Zcode):
@@ -150,7 +150,7 @@ class CodeGenVisitor(BaseVisitor):
         """#TODO: Implement
         #* tạo emitVAR và o.symbol[0].append, cập nhật o.symbol[0][-1].line
         #* if ast.varInit is not None:
-            #* elf.visit(Assign(ast.name, ast.varInit), o) 
+            #* self.visit(Assign(ast.name, ast.varInit), o) 
         #* elif type(ast.varType) is ArrayType:
             #* giống phần khai báo biến static gần giống ý tưởng
         """

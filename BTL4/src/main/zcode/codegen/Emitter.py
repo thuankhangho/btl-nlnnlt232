@@ -89,6 +89,8 @@ class Emitter():
         # frame: Frame
 
         if type(typ) is NumberType:
+            return self.emitPUSHFCONST(in_, frame)
+        elif type(typ) is BoolType:
             return self.emitPUSHICONST(in_, frame)
         elif type(typ) is StringType:
             frame.push()

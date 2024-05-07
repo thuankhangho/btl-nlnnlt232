@@ -48,7 +48,7 @@ class Emitter():
             return "V"
         elif typeIn is ArrayType: #* kiểu array
             return "[" * len(inType.size)  + self.getJVMType(inType.eleType)
-        elif typeIn is Zcode: #* kiểu Zcode trương trình
+        elif typeIn is Zcode: #* kiểu Zcode chương trình
             return "LZCodeClass;"
         elif typeIn is VarZcode: #* kiểu VarZcode chỉ khi type = None, cần lưu line ở chỉnh sau này
             return "None"
