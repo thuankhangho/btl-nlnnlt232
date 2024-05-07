@@ -179,7 +179,7 @@ class CodeGenVisitor(BaseVisitor):
         """                                 
 
     def visitCallExpr(self, ast, o):
-        #* phần io -> gọi qua class io.java trong pahanf lib
+        #* phần io -> gọi qua class io.java trong thư mục lib
         if ast.name.name in ["readNumber", "readBool", "readString"]:
             if ast.name.name == "readNumber": 
                 if o.checkTypeLHS_RHS: return None, NumberType()

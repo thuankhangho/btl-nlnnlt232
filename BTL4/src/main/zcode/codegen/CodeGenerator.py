@@ -320,12 +320,13 @@ from abc import ABC
 from Visitor import *
 from AST import *
 
-class MType:
-    def __init__(self, partype, rettype):
-        self.partype = partype
-        self.rettype = rettype
+class MType: # Method Type
+    def __init__(self, name, partype, rettype):
+        self.name = name # tên hàm
+        self.partype = partype # kiểu của tham số đầu vào
+        self.rettype = rettype # kiểu trả về của hàm
 
-class Symbol:
+class Symbol: # Var Type (value = index khi là biến cục bộ, value = CName khi là biến toàn cục)
     def __init__(self, name, mtype, value=None):
         self.name = name
         self.mtype = mtype
@@ -340,12 +341,12 @@ class CodeGenerator:
 
     def init(self):
         return [[
-            Symbol("readNumber", MType([], NumberType()), CName(self.libName)),
-            Symbol("writeInt", MType([NumberType()], VoidType()), CName(self.libName)),
-            Symbol("readBool", MType([], BoolType()), CName(self.libName)),
-            Symbol("writeBool", MType([BoolType()], VoidType()), CName(self.libName)),
-            Symbol("readString", MType([], StringType()), CName(self.libName)),
-            Symbol("writeString", MType([StringType()], VoidType()), CName(self.libName))
+            Symbol("readNumber", MType("readNumber", [], NumberType()), CName(self.libName)),
+            Symbol("writeNumber", MType("writeNumber", [NumberType()], VoidType()), CName(self.libName)),
+            Symbol("readBool", MType("readBool", [], BoolType()), CName(self.libName)),
+            Symbol("writeBool", MType("writeBool", [BoolType()], VoidType()), CName(self.libName)),
+            Symbol("readString", MType("readString", [], StringType()), CName(self.libName)),
+            Symbol("writeString", MType("writeString", [StringType()], VoidType()), CName(self.libName))
         ]]
 
     def gen(self, ast, path):
@@ -391,10 +392,21 @@ class CodeGenVisitor(BaseVisitor):
         self.path = path
         self.emit = Emitter(self.path + "/" + self.className + ".j")
 
-    def visitProgram(self, ast: Program, c):
+    def visitProgram(self, ast: Program, o):
         self.emit.printout(self.emit.emitPROLOG(self.className, "java.lang.Object"))
+
+        # Lưu các biến toàn cục & hàm vào 1 danh sách nào đó
+        for decl in ast.decl:
+            if type(decl) is VarDecl: # -> Symbol
+                self.env[0].append(Symbol())
+            elif type(decl) is FuncDecl and decl.body is not None: # -> MType
+                self.env[0].append(MType())
+
+        # Xử lý constructor của class ZCodeClass
+        self.emit.printout(self.emit.emitMETHOD("<init>", MType("init", [], VoidType()), False, Frame("<init>", VoidType)))
+
         self.emit.emitEPILOG()
-        return c
+        return o
 
     def visitVarDecl(self, ast, o):
         pass

@@ -16,7 +16,7 @@ class Emitter():
     def getJVMType(self, inType):
         typeIn = type(inType)
         if typeIn is NumberType:
-            return "I"
+            return "F"
         elif typeIn is StringType:
             return "Ljava/lang/String;"
         elif typeIn is VoidType:
@@ -24,25 +24,21 @@ class Emitter():
         elif typeIn is BoolType:
             return "Z"
         elif typeIn is ArrayType:
-            arr = ""
-            for _ in range(len(inType.size)):
-                arr = arr + "["
-            return arr + self.getJVMType(inType.eleType) if arr != "" else "[" + self.getJVMType(inType.eleType)
-        elif typeIn is cgen.MType:
-            return "(" + "".join(list(map(lambda x: self.getJVMType(x), inType.partype))) + ")" + self.getJVMType(inType.rettype)
-        elif typeIn is cgen.ClassType:
-            return "L" + inType.name + ";"
+            return "[" * len(inType.size) + self.getJVMType(inType.eleType)
+        elif typeIn is cgen.MType: # Function
+            # print(self.getJVMType(inType.rettype))
+            return "(" + "".join(list(map(lambda x: self.getJVMType(x), inType.partype))) + ")" + (self.getJVMType(inType.rettype) if inType.rettype else "None")
         elif typeIn is str:
             return inType
 
-    def getFullType(inType):
-        typeIn = type(inType)
-        if typeIn is NumberType:
-            return "int"
-        elif typeIn is StringType:
-            return "java/lang/String"
-        elif typeIn is VoidType:
-            return "void"
+    # def getFullType(inType):
+    #     typeIn = type(inType)
+    #     if typeIn is NumberType:
+    #         return "int"
+    #     elif typeIn is StringType:
+    #         return "java/lang/String"
+    #     elif typeIn is VoidType:
+    #         return "void"
 
     def emitPUSHICONST(self, in_, frame):
         # in: Int or Sring

@@ -80,8 +80,8 @@ class Emitter():
     #* khơi tạo hàm 
     def emitMETHOD(self, lexeme, in_, isStatic, frame):
         #& lexeme: String (tên hàm)
-        #& in_: Type (type của hàm FUNCZcode)
-        #& isStatic: Boolean (chỉ có contrutor là không static còn lại là phải hết)
+        #& in_: Type (type của hàm FuncZcode)
+        #& isStatic: Boolean (chỉ có construtor là không static còn lại là phải hết)
         #& frame: Frame
 
         return self.jvm.emitMETHOD(lexeme, self.getJVMType(in_), isStatic)
