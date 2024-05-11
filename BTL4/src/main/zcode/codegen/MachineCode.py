@@ -731,7 +731,7 @@ class JasminCode(MachineCode):
     def emitMETHOD(self, lexeme, typ, isStatic):
         # lexeme: String
         # typ: String
-        # isStaic: Boolean
+        # isStatic: Boolean
         if isStatic:
             return JasminCode.END + ".method public static " + lexeme + typ + JasminCode.END
         else:

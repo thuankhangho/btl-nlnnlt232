@@ -15,6 +15,8 @@ class Emitter():
 
     def getJVMType(self, inType):
         typeIn = type(inType)
+        if typeIn is str:
+            return "LZCodeClass;"
         if typeIn is NumberType:
             return "F"
         elif typeIn is StringType:
@@ -154,6 +156,8 @@ class Emitter():
         # ... -> ..., value
 
         frame.push()
+        if name == "this":
+            return self.jvm.emitALOAD(index)
         if type(inType) is NumberType:
             return self.jvm.emitFLOAD(index)
         elif type(inType) is BoolType:

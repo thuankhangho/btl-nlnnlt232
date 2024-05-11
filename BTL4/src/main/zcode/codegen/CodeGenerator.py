@@ -320,7 +320,7 @@ from abc import ABC
 from Visitor import *
 from AST import *
 
-class MType: # Method Type
+class MType(Type): # Method Type
     def __init__(self, name, partype, rettype):
         self.name = name # tên hàm
         self.partype = partype # kiểu của tham số đầu vào
@@ -328,26 +328,26 @@ class MType: # Method Type
 
 class Symbol: # Var Type (value = index khi là biến cục bộ, value = CName khi là biến toàn cục)
     def __init__(self, name, mtype, value=None):
-        self.name = name
+        self.name = name # string
         self.mtype = mtype
         self.value = value
 
     def __str__(self):
-        return "Symbol("+self.name+","+str(self.mtype)+")"
+        return "Symbol(" + self.name + "," + str(self.mtype) + ")"
 
 class CodeGenerator:
     def __init__(self):
         self.libName = "io"
 
     def init(self):
-        return [[
+        return [
             Symbol("readNumber", MType("readNumber", [], NumberType()), CName(self.libName)),
             Symbol("writeNumber", MType("writeNumber", [NumberType()], VoidType()), CName(self.libName)),
             Symbol("readBool", MType("readBool", [], BoolType()), CName(self.libName)),
             Symbol("writeBool", MType("writeBool", [BoolType()], VoidType()), CName(self.libName)),
             Symbol("readString", MType("readString", [], StringType()), CName(self.libName)),
             Symbol("writeString", MType("writeString", [StringType()], VoidType()), CName(self.libName))
-        ]]
+        ]
 
     def gen(self, ast, path):
         # ast: AST
@@ -357,17 +357,17 @@ class CodeGenerator:
         gc = CodeGenVisitor(ast, gl, path)
         gc.visit(ast, None)
 
-class SubBody():
+class SubBody(): # dùng khi visit statement hoặc hàm
     def __init__(self, frame, sym):
         self.frame = frame
         self.sym = sym
 
-class Access():
+class Access(): # dùng khi visit expression
     def __init__(self, frame, sym, isLeft, isFirst=False):
         self.frame = frame
         self.sym = sym
-        self.isLeft = isLeft # neu la true -> bien nay nam ben trai -> store, neu la false -> bien nay nam ben phai -> load
-        self.isFirst = isFirst # ko can quan tam
+        self.isLeft = isLeft # nếu true -> biến này nằm bên trái -> store, nếu false -> biến này nằm bên phải -> load
+        self.isFirst = isFirst # bỏ qua
 
 class Val(ABC):
     pass
@@ -387,7 +387,7 @@ class CodeGenVisitor(BaseVisitor):
         # path: File
 
         self.astTree = astTree
-        self.env = env # tu class CodeGenerator
+        self.env = env # từ class CodeGenerator
         self.className = "ZCodeClass"
         self.path = path
         self.emit = Emitter(self.path + "/" + self.className + ".j")
@@ -395,22 +395,44 @@ class CodeGenVisitor(BaseVisitor):
     def visitProgram(self, ast: Program, o):
         self.emit.printout(self.emit.emitPROLOG(self.className, "java.lang.Object"))
 
+        env: SubBody = SubBody(None, self.env)
+
         # Lưu các biến toàn cục & hàm vào 1 danh sách nào đó
         for decl in ast.decl:
-            if type(decl) is VarDecl: # -> Symbol
-                self.env[0].append(Symbol())
-            elif type(decl) is FuncDecl and decl.body is not None: # -> MType
-                self.env[0].append(MType())
+            if type(decl) is VarDecl: # -> Var Type
+                env = self.visit(decl, env)
+
+        for decl in ast.decl:
+            if type(decl) is FuncDecl and decl.body is not None: # -> Method Type
+                env = self.visit(decl, env)
+        # for x in env.sym:
+        #     print(x)
 
         # Xử lý constructor của class ZCodeClass
-        self.emit.printout(self.emit.emitMETHOD("<init>", MType("init", [], VoidType()), False, Frame("<init>", VoidType)))
-
+        # self.emit.printout(self.emit.emitMETHOD("<init>", MType("<init>", [], VoidType()), False, Frame("<init>", VoidType())))
+        self.genMETHOD(FuncDecl(Id("<init>"), [], Block([])), env, Frame("<init>", VoidType()))
+        
+        # Xử lý biến toàn cục
+        self.genGlobalVarInit(env.sym, Frame("<clinit>", VoidType()), ast.decl)
         self.emit.emitEPILOG()
         return o
-
-    def visitVarDecl(self, ast, o):
-        pass
-
+    
+    def visitVarDecl(self, ast: VarDecl, o):
+        if o.frame is None: # biến toàn cục
+            code = self.emit.emitATTRIBUTE(ast.name.name, ast.varType, False, "")
+            self.emit.printout(code)
+            return SubBody(None, [Symbol(ast.name.name, ast.varType, CName(self.className))] + o.sym)
+        else: # biến cục bộ
+            idx = o.frame.getNewIndex()
+            code = self.emit.emitVAR(idx, ast.name, ast.type, o.frame.getStartLabel(), o.frame.getEndLabel())
+            if ast.init:
+                codeInit, initTyp = self.visit(ast.init, Access(o.frame, o.sym, True))
+                codeWrite = self.emit.emitWRITEVAR(ast.name, ast.varType, idx, o.frame)
+                self.emit.printout(codeInit + code + codeWrite)
+            else:
+                self.emit.printout(code)
+            return SubBody(o.frame, [Symbol(ast.name.name, ast.varType, Index(idx))] + o.sym)
+            
     def visitFuncDecl(self, ast, o):
         pass
 
@@ -483,25 +505,123 @@ class CodeGenVisitor(BaseVisitor):
         pass
 
     def visitAssign(self, ast, o):
-        pass
+        rc, rt = self.visit(ast.rhs, Access(o.frame, o.symbol, False))
+        lc, lt = self.visit(ast.lhs, Access(o.frame, o.symbol, True))
+
+        self.emit.printout(rc)
+        self.emit.printout(lc)
 
     def visitCallStmt(self, ast, o):
         pass
 
-    def visitNumberLiteral(self, ast, o):
-        code = self.emit.emitPUSHFCONST(ast.value, o.frame)
+    def visitNumberLiteral(self, ast: NumberLiteral, o):
+        code = self.emit.emitPUSHFCONST(str(ast.value), o.frame)
         typ = NumberType()
         return code, typ
 
     def visitBooleanLiteral(self, ast, o):
-        code = self.emit.emitPUSHICONST(ast.value, o.frame)
+        val = "true" if ast.value == True else "false"
+        code = self.emit.emitPUSHICONST(val, o.frame)
         typ = BoolType()
         return code, typ
 
     def visitStringLiteral(self, ast, o):
         code = self.emit.emitPUSHCONST(ast.value, StringType(), o.frame)
-        typ = BoolType()
+        typ = StringType()
         return code, typ
     
     def visitArrayLiteral(self, ast, o):
         pass
+
+    def genMETHOD(self, funcdecl: FuncDecl, o, frame): # viết lại
+        # self.genMETHOD(FuncDecl("<init>", [], Block([])), env, Frame("<init>", VoidType()))
+
+        # self.emit.emitMETHOD("<init>", MType("init", [], VoidType()), False, Frame("<init>", VoidType))
+
+        isInit = funcdecl.name.name == "<init>"
+        isMain = funcdecl.name.name == "main" and len(funcdecl.param) == 0
+
+        frame.enterScope(True)
+
+        if isInit:
+            self.emit.printout(self.emit.emitMETHOD("<init>", MType("<init>", [], VoidType()), False, Frame("<init>", VoidType())))
+            self.emit.printout(self.emit.emitLABEL(frame.getStartLabel(), frame))
+            self.emit.printout(self.emit.emitVAR(frame.getNewIndex(), "this", self.className, frame.getStartLabel(), frame.getEndLabel(), frame))
+            self.emit.printout(self.emit.emitREADVAR("this", self.className, 0, frame))
+            self.emit.printout(self.emit.emitINVOKESPECIAL(frame))
+            self.emit.printout(self.emit.emitRETURN(VoidType(), frame))   
+            self.emit.printout(self.emit.emitLABEL(frame.getEndLabel(), frame))
+            self.emit.printout(self.emit.emitENDMETHOD(frame))
+        elif isMain:
+            pass
+        else:
+            pass
+
+        frame.exitScope()
+
+        # isMain = consdecl.name.name == "main" and len(consdecl.param) == 0
+        # returnType = VoidType() if isInit else consdecl.returnType
+        # methodName = "<init>" if isInit else consdecl.name.name
+        # intype = [ArrayType(0, StringType())] if isMain else list(map(lambda x: x.typ, consdecl.param))
+        # mtype = MType(intype, returnType)
+
+        # self.emit.printout(self.emit.emitMETHOD(methodName, mtype, not isInit, frame))
+
+        # frame.enterScope(True)
+
+        # glenv = o
+
+        # # Generate code for parameter declarations
+        # # if isInit:
+        #     # self.emit.printout(self.emit.emitVAR(frame.getNewIndex(), "this", ClassType(Id(self.className)), frame.getStartLabel(), frame.getEndLabel(), frame))
+        # if isMain:
+        #     self.emit.printout(self.emit.emitVAR(frame.getNewIndex(), "args", ArrayType(0, StringType()), frame.getStartLabel(), frame.getEndLabel(), frame))
+        # else:
+        #     local = reduce(lambda env, ele: SubBody(frame, [self.visit(ele, env)] + env.sym), consdecl.param, SubBody(frame, []))
+        #     glenv = local.sym + glenv
+
+        # body = consdecl.body
+        # self.emit.printout(self.emit.emitLABEL(frame.getStartLabel(), frame))
+
+        # # Generate code for statements
+        # if isMain:
+        #     # self.emit.printout(self.emit.emitREADVAR("this", ClassType(Id(self.className)), 0, frame))
+        #     self.emit.printout(self.emit.emitINVOKESPECIAL(frame))
+        # list(map(lambda x: self.visit(x, SubBody(frame, glenv)), body.stmt))
+
+        # self.emit.printout(self.emit.emitLABEL(frame.getEndLabel(), frame))
+        # if type(returnType) is VoidType:
+        #     self.emit.printout(self.emit.emitRETURN(VoidType(), frame))
+        # self.emit.printout(self.emit.emitENDMETHOD(frame))
+        # frame.exitScope()
+
+    def genGlobalVarInit(self, env, frame, decls): # viết lại
+        returnType = VoidType()
+        methodName = "<clinit>"
+        intype = []
+        mtype = MType(methodName, intype, returnType)
+        self.emit.printout(self.emit.emitMETHOD(methodName, mtype, True, frame))
+        
+        frame.enterScope(True)
+        self.emit.printout(self.emit.emitLABEL(frame.getStartLabel(), frame))
+
+        # Sinh mã cho statement
+        for decl in decls:
+            if type(decl) is VarDecl and decl.varInit:
+                if type(decl.varType) is not ArrayType:
+                    codeInit, initTyp = self.visit(decl.varInit, SubBody(frame, env))
+                    codeWrite = self.emit.emitPUTSTATIC(self.className + "." + decl.name.name, initTyp, frame)
+                    self.emit.printout(codeInit + codeWrite)
+                else:
+                    pass
+        #             typ = decl.varType
+        #             codeSize = self.emit.emitPUSHICONST(typ.dimensions[0], frame)
+        #             codeNew = self.emit.emitNEWARRAY(typ.typ, frame)
+        #             codeInit, initTyp = self.visit(decl.init, Access(frame, env, False))
+        #             self.emit.printout(codeSize + codeNew + codeInit + self.emit.emitPUTSTATIC("ZCodeClass." + decl.name, typ, frame))
+        #             continue
+
+        self.emit.printout(self.emit.emitRETURN(VoidType(), frame))
+        self.emit.printout(self.emit.emitLABEL(frame.getEndLabel(), frame))
+        self.emit.printout(self.emit.emitENDMETHOD(frame))
+        frame.exitScope()
