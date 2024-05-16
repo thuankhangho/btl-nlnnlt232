@@ -1,3 +1,4 @@
+from tokenize import String
 from Utils import *
 # from StaticCheck import *
 # from StaticError import *
@@ -6,6 +7,50 @@ from MachineCode import JasminCode
 from AST import *
 from CodeGenError import *
 from Frame import *
+
+class GenType(Type):
+    pass
+
+class FuncType(GenType):
+    name: str
+    typ: Type
+    param: List[Type]
+    line: int
+    
+    def __init__(self, name, typ, param):
+        self.typ = typ
+        self.name = name
+        self.param = param
+        self.line = 0 # hàng trong buffer
+    
+    def __str__(self):
+        return f"FuncType(param=[{', '.join(str(i) for i in self.param)}],typ={str(self.typ)},name={self.name},line={self.line})"
+
+class FuncScopeType(GenType):
+    name: str
+    body: Stmt
+    param: List[Type]
+    def __init__(self, name, body, param):
+        self.name = name
+        self.body = body
+        self.param = param
+
+class VarType(GenType):
+    name: str
+    typ: Type
+    index: int
+    line: int
+    init: Type
+    
+    def __init__(self, name, typ, index, init = False):
+        self.typ = typ
+        self.name = name
+        self.index = index # vị trí biến trong bộ nhớ
+        self.line = 0 # hàng trong buffer
+        self.init = init
+    
+    def __str__(self):
+        return f"VarType(type={self.typ},name={self.name},index={self.index},line={self.line},init={self.init})"
 
 class Emitter():
     def __init__(self, filename):
@@ -27,9 +72,11 @@ class Emitter():
             return "Z"
         elif typeIn is ArrayType:
             return "[" * len(inType.size) + self.getJVMType(inType.eleType)
-        elif typeIn is cgen.MType: # Function
+        elif typeIn is VarType:
+            return "None"
+        elif typeIn is FuncType: # Function
             # print(self.getJVMType(inType.rettype))
-            return "(" + "".join(list(map(lambda x: self.getJVMType(x), inType.partype))) + ")" + (self.getJVMType(inType.rettype) if inType.rettype else "None")
+            return "(" + "".join(list(map(lambda x: self.getJVMType(x), inType.param))) + ")" + (self.getJVMType(inType.typ) if inType.typ else "None")
         elif typeIn is str:
             return inType
 
@@ -721,3 +768,13 @@ class Emitter():
 
     def clearBuff(self):
         self.buff.clear()
+        
+    def setNewLine(self):
+        return len(self.buff) - 1
+    
+    def setType(self, in_):
+        if type(in_) is VarType:
+            typ = self.getJVMType(in_.typ)
+        else:
+            typ = self.getJVMType(in_)
+        self.buff[in_.line] = self.buff[in_.line].replace("None", typ)

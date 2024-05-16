@@ -13,7 +13,6 @@ class IllegalOperandException(Exception):
 
     def __str__(self):
         return "Illegal Operand: " + self.s + "\n"
-#################################################################################################################################
 
 class IllegalRuntimeException(Exception):
     def __init__(self, msg):
@@ -22,6 +21,7 @@ class IllegalRuntimeException(Exception):
 
     def __str__(self):
         return "Illegal Runtime: " + self.s + "\n"
+#################################################################################################################################
 
 from abc import ABC, abstractmethod, ABCMeta
 

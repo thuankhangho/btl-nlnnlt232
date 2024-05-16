@@ -1,2 +1,5 @@
-number a <- 100
+number a <- 1
+        func main() return
+        func foo(number x) return 1
+        func foo1(number y) return false
         
