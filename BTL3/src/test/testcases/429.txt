@@ -2,8 +2,6 @@
             func main() begin
                 dynamic a
                 dynamic b
-                a <- 1
-                b <- a
                 return 1
             end
         

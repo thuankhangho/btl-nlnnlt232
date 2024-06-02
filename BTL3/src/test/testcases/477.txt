@@ -1,5 +1,5 @@
 
-             func foo(number x) begin
+            func foo(number x) begin
                 return 1
             end
             func test()

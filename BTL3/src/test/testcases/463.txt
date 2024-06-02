@@ -1,0 +1,6 @@
+
+            func main() return
+            var c <- true
+            dynamic a <- 2
+            string b <- 3
+        

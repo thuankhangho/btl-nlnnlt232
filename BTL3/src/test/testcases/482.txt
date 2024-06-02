@@ -1,0 +1,11 @@
+
+        func main()
+        begin
+            var num1 <- readNumber()
+            var num2 <- readNumber()
+            bool a
+            if (a) writeString("Yes")
+            else writeString("No")
+            return 1
+        end
+        

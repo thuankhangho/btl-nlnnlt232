@@ -1,0 +1,8 @@
+
+            dynamic d
+            func test(number a, number b) begin
+                dynamic e
+                string d
+            end
+            func main() return 1
+        

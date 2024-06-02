@@ -1,0 +1,5 @@
+
+            dynamic a
+            dynamic x <- a == (a + 2)
+            func main() return
+        
